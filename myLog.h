@@ -1,7 +1,7 @@
 /*
-    Created by Leander on 30/04/2021.
-    Log function, use this to log output to a file.
-*/
+ * Created by Leander on 30/04/2021.
+ * Log function, use this to log output to a file.
+ */
 
 #ifndef __MYLOG_H__
 #define __MYLOG_H__
@@ -21,22 +21,22 @@ __attribute__((__format__(__printf__, 4, 6)))
 
 // Functions
 /*
-* Use this to log lines to the output log.
-* void myLog(char logLevel, char * file, int line, char append, const char * message, ...)
-* @param:
-* logLevel:
-*		- 1 : INFO : Just normal log info.
-*		- 2 : WARN : Warning that did not terminate the program but should not happen.
-*		- 3 : CRIT : Critical warning that terminates the program.
-* file: from what file the message is. You can use __FILE__
-* line: from what line the message is. You can use __LINE__
-* append: Wether to append (1) or not (0). If you do not append it will clear to file.
-* message: A log message you would like to put in the log.
-* @return:VOID
-* Output.log example line
-* logLevel :: hh:mm:ss - dd/mm/yyyy :: File: FILE_LOCATION (line: LINE IN CODE) :: message
-* message can be used like printf(), ... "This is a number: %i", 1); will put "This is a number: 1" as message in the log file.
-*/
+ * Use this to log lines to the output log.
+ * void myLog(char logLevel, char * file, int line, char append, const char * message, ...)
+ * @param:
+ * logLevel:
+ * - 1 : INFO : Just normal log info.
+ * - 2 : WARN : Warning that did not terminate the program but should not happen.
+ * - 3 : CRIT : Critical warning that terminates the program.
+ * file: from what file the message is. You can use __FILE__
+ * line: from what line the message is. You can use __LINE__
+ * append: Whether to append (1) or not (0). If you do not append it will clear to file.
+ * message: A log message you would like to put in the log. Do not end with \n, this is added automatically.
+ * @return:VOID
+ * Output.log example line
+ * logLevel :: hh:mm:ss - dd/mm/yyyy :: File: FILE_LOCATION (line: LINE IN CODE) :: message
+ * message can be used like printf(), ... "This is a number: %i", 1); will put "This is a number: 1" as message in the log file.
+ */
 void myLog(char logLevel, char *file, int line, char append, const char *message, ...);
 
 #endif // MYLOG_H
