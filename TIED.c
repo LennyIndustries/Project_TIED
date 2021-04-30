@@ -33,7 +33,6 @@ static inline unsigned long long S_to_binary_(const char *s)
  * @return: int (counter) the total counted characters
  */
 int fileCharacters(char *fileName);
-//test
 /*
  * Reads hex from the header of a BMP file and converts it to decimal. Can handle up to 4 bytes and does not rely on type.
  * @param: const char * (header) the header array, unsigned char (startPos) the starting point in the array, unsigned char (bytesToRead) the amount of bytes to read out of the header
