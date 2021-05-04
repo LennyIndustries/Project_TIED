@@ -37,6 +37,6 @@ __attribute__((__format__(__printf__, 4, 6)))
  * logLevel :: hh:mm:ss - dd/mm/yyyy :: File: FILE_LOCATION (line: LINE IN CODE) :: message
  * message can be used like printf(), ... "This is a number: %i", 1); will put "This is a number: 1" as message in the log file.
  */
-void myLog(char logLevel, char *file, int line, char append, const char *message, ...);
+void myLog(char logLevel, char *file, unsigned int line, char append, const char *message, ...);
 
 #endif // MYLOG_H

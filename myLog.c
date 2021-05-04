@@ -6,13 +6,19 @@
 // Libraries
 #include "myLog.h"
 
-void myLog(char logLevel, char *file, int line, char append, const char *message, ...)
+struct
+{
+	unsigned char logLevel: 2;
+	unsigned char append: 1;
+} myLogData;
+
+void myLog(char logLevel, char *file, unsigned int line, char append, const char *message, ...) // Add bitfield support
 {
 	// A big ball of wibbly wobbly, timey wimey stuff.
-	char dateTime[22] = {0};
+	char dateTime[22] = {'\0'};
 	time_t myTime = time(NULL);
 	// Log file.
-	FILE *myLog = NULL;
+	FILE *myLogFile = NULL;
 	char *logLevelString = NULL;
 	// Arguments
 	va_list arg;
@@ -29,26 +35,26 @@ void myLog(char logLevel, char *file, int line, char append, const char *message
 			logLevelString = "CRIT";
 			break;
 		default:
-			logLevelString = "!ERR";
-			break;
+			myLog(2, file, line, 1, "Could not resolve log level: %i.", logLevel);
+			return;
 	}
 
-	myLog = fopen(OUTPUTFILENAME, append ? "a" : "w"); // Opens the log file
+	myLogFile = fopen(OUTPUTFILENAME, append ? "a" : "w"); // Opens the log file
 
-	if (myLog == NULL) // Check if the file is opened
+	if (myLogFile == NULL) // Check if the file is opened
 	{
-		printf("-!!!- CRITICAL ERROR -!!!-\nCan not open log file!\nEXITING\n");
+		printf("-!!!- CRITICAL ERROR -!!!-\nCan not open log file!\nTerminating program.\n");
 		exit(EXIT_FAILURE);
 	}
 
 	strftime(dateTime, 22, "%H:%M:%S - %d/%m/%Y", localtime(&myTime)); // Creates date and time string for log file
 
-	fprintf(myLog, "%s :: %s :: File: %s (line: %d) :: ", logLevelString, dateTime, file, line); // Prints all needed info to the log file
+	fprintf(myLogFile, "%s :: %s :: File: %s (line: %u) :: ", logLevelString, dateTime, file, line); // Prints all needed info to the log file
 
 	va_start(arg, message); // Prints the message to the log file
-	vfprintf(myLog, message, arg);
+	vfprintf(myLogFile, message, arg);
 	va_end(arg);
-	fprintf(myLog, "\n"); // Prints a new line at the end
+	fprintf(myLogFile, "\n"); // Prints a new line at the end
 
-	fclose(myLog); // Closes the log file
+	fclose(myLogFile); // Closes the log file
 }
