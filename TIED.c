@@ -133,29 +133,13 @@ int main(const int argc, char * const argv[])
 	// END OF TESTING //
 
 	char *imageP = NULL; // BMP image pointer input
-	char *outputP = NULL; // BMP image pointer output
+	char *outputP = NULL; // Pointer output
 	char *textP = NULL; // TXT file pointer, either in- or output
 
 	unsigned char key = 0; // Caesar Cipher key, must be between 0 and 127
 	char encrypt = -1; // Whether to encrypt or decrypt
 
-
-
-	for (int i = 1; i < argc; i++)
-	{
-		if (strstr(argv[i], "/"))
-		{
-			lowerStr(argv[i]);
-		}
-	}
-
-	if (!strcmp(argv[1], "/help"))
-	{
-		myLog(1, __FILE__, __LINE__, 1, "User requested help. Printing & exiting.");
-		printHelp();
-		exit(EXIT_SUCCESS);
-	}
-	else if (argc < 7)
+	if (argc <= 1)
 	{
 		printf("To few arguments: %i.\nRun /help for more info.\nTerminating program.\n", argc);
 		printHelp();
@@ -164,6 +148,14 @@ int main(const int argc, char * const argv[])
 	}
 	else
 	{
+        for (int i = 1; i < argc; i++)
+        {
+            if (strstr(argv[i], "/"))
+            {
+                lowerStr(argv[i]);
+            }
+        }
+
 		for (int i = 1; i < argc; i++) // Loading arguments into local variables
 		{
 			if (!strcmp(argv[i], "/help"))
