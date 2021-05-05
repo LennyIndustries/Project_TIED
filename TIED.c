@@ -6,33 +6,28 @@
  *
  * gcc -Wall -pedantic -c myLog.c -o myLog.o
  * gcc -Wall -pedantic TIED.c myLog.o -o TIED.exe
+ *
+ * http://www.libsdl.org/index.php
  */
 
 // Libraries
+// Own
 #include "myLog.h"
 
-#include <limits.h>
+// External
+//#include "ExternalLibs/SDL2/SDL.h"
+
+// Standard
+//#include <limits.h>
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h>
 #include <stdint.h>
 
 // Definitions
-#define B(x) S_to_binary_(#x) // https://stackoverflow.com/a/15114188/4620857
-
-static inline unsigned long long S_to_binary_(const char *s)
-{
-	unsigned long long i = 0;
-	while (*s)
-	{
-		i <<= 1;
-		i += *s++ - '0';
-	}
-	return i;
-}
-
 #define START 0x2 // STX :: 0000 0010 :: 2
 #define STOP 0x3 // ETX :: 0000 0011 :: 3
+#define B(x) S_to_binary_(#x) // https://stackoverflow.com/a/15114188/4620857
 
 // Functions
 /*
@@ -71,12 +66,18 @@ char checkFile(char *fileName, char *fileExtension, char terminate);
 /*
  * TBD
  */
-int indexOf(const char * str, char character);
+int indexOf(const char *str, char character);
 
 /*
  * TBD
  */
 void subString(char *str_source, char *str_destination, int startPos, int length);
+
+/*
+ * Allows binary notation
+ * https://stackoverflow.com/a/15114188/4620857
+ */
+static inline unsigned long long S_to_binary_(const char *s);
 
 // Main
 /*
@@ -88,11 +89,14 @@ void subString(char *str_source, char *str_destination, int startPos, int length
  * - /o [OUTPUT FILE} :: output file, either .txt OR .bmp
  * - /k [KEY] :: encryption key, a key between 0 and 127 for the basic Caesar Cipher, a offset for the characters in ASCII format (0 - 127)
  */
-int main(const int argc, char * const argv[])
+int main(const int argc, char *const argv[])
 {
 	myLog(1, __FILE__, __LINE__, 0, "Program running: clearing log."); // This clears the log, do NOT clear it anymore.
 	printf("Hello %s\nWelcome to TIED.\n\n", getenv("USERNAME"));
 	// TESTING //
+	// https://stackoverflow.com/questions/22253074/how-to-play-or-open-mp3-or-wav-sound-file-in-c-program
+	//PlaySound(TEXT("boss_battle_#2.mp3"), NULL, SND_FILENAME | SND_ASYNC);
+	//system("pause");
 	char string[] = "TEST - test"; // MFR
 	lowerStr(string); // MFR
 	printf("%s\n", string); // MFR
@@ -148,13 +152,13 @@ int main(const int argc, char * const argv[])
 	}
 	else
 	{
-        for (int i = 1; i < argc; i++)
-        {
-            if (strstr(argv[i], "/"))
-            {
-                lowerStr(argv[i]);
-            }
-        }
+		for (int i = 1; i < argc; i++)
+		{
+			if (strstr(argv[i], "/"))
+			{
+				lowerStr(argv[i]);
+			}
+		}
 
 		for (int i = 1; i < argc; i++) // Loading arguments into local variables
 		{
@@ -241,7 +245,7 @@ int decimalFromHeader(const char *header, unsigned char startPos, unsigned char 
 {
 	int decimal = 0;
 	// https://docs.oracle.com/cd/E19455-01/806-0477/chapter3-10/index.html
-	uintptr_t  base = 1; // Needs long long because base can go to 68719476736 if 4 bytes are being read, long gives only 4 bytes on 32 bit OS
+	uintptr_t base = 1; // Needs long long because base can go to 68719476736 if 4 bytes are being read, long gives only 4 bytes on 32 bit OS
 	unsigned char nybbleStorage = '\0';
 	unsigned char nybbleMask = B(00001111);
 
@@ -316,7 +320,7 @@ char checkFile(char *fileName, char *fileExtension, char terminate)
 	}
 }
 
-int indexOf(const char * str, char character)
+int indexOf(const char *str, char character)
 {
 	int index = -1;
 	char tmpCharacterStorage = '\0';
@@ -339,3 +343,13 @@ void subString(char *str_source, char *str_destination, int startPos, int length
 	myLog(1, __FILE__, __LINE__, 1, "Substring from: %s: %s.", str_source, str_destination);
 }
 
+static inline unsigned long long S_to_binary_(const char *s)
+{
+	unsigned long long i = 0;
+	while (*s)
+	{
+		i <<= 1;
+		i += *s++ - '0';
+	}
+	return i;
+}
