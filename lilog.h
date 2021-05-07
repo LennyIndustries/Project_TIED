@@ -3,12 +3,8 @@
  * Log function, use this to log output to a file.
  */
 
-#ifndef __MYLOG_H__
-#define __MYLOG_H__
-
-#ifdef __GNUC__ // on gcc will enable warnings, just like for printf
-__attribute__((__format__(__printf__, 4, 6)))
-#endif
+#ifndef PROJECT_TIED_MYLOG_H
+#define PROJECT_TIED_MYLOG_H
 
 // Libraries
 #include <stdio.h>
@@ -17,12 +13,12 @@ __attribute__((__format__(__printf__, 4, 6)))
 #include <stdarg.h>
 
 // Definitions
-#define OUTPUTFILENAME "Output.log"
+#define LILOG_OUTPUTFILENAME "Output.log"
 
 // Functions
 /*
  * Use this to log lines to the output log.
- * void myLog(char logLevel, char * file, int line, char append, const char * message, ...)
+ * void liLog(char logLevel, char * file, int line, char append, const char * message, ...)
  * @param:
  * logLevel:
  * - 1 : INFO : Just normal log info.
@@ -37,6 +33,6 @@ __attribute__((__format__(__printf__, 4, 6)))
  * logLevel :: hh:mm:ss - dd/mm/yyyy :: File: FILE_LOCATION (line: LINE IN CODE) :: message
  * message can be used like printf(), ... "This is a number: %i", 1); will put "This is a number: 1" as message in the log file.
  */
-void myLog(char logLevel, char *file, unsigned int line, char append, const char *message, ...);
+void liLog(char logLevel, char *file, unsigned int line, char append, const char *message, ...);
 
-#endif // MYLOG_H
+#endif // PROJECT_TIED_MYLOG_H

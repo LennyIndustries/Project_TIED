@@ -5,79 +5,41 @@
  * MFR = Mark For Removal (AKA DEBUG), must be removed out of release version.
  *
  * gcc -Wall -pedantic -c myLog.c -o myLog.o
- * gcc -Wall -pedantic TIED.c myLog.o -o TIED.exe
+ * gcc -Wall -pedantic TIED.c liLog.o -o TIED.exe
  *
  * http://www.libsdl.org/index.php
  */
 
 // Libraries
 // Own
-#include "myLog.h"
-
-// External
-//#include "ExternalLibs/SDL2/SDL.h"
+#include "TIEDlib.h"
+/*
+ * This header contains the following headers:
+ * - stdio.h
+ * - stdlib.h
+ * - time.h
+ * - stdarg.h
+ * - string.h
+ * - ctype.h
+ * - unistd.h
+ */
 
 // Standard
 //#include <limits.h>
-#include <string.h>
-#include <ctype.h>
-#include <unistd.h>
+//#include <unistd.h>
 #include <stdint.h>
 
 // Definitions
 #define START 0x2 // STX :: 0000 0010 :: 2
 #define STOP 0x3 // ETX :: 0000 0011 :: 3
-#define B(x) S_to_binary_(#x) // https://stackoverflow.com/a/15114188/4620857
 
 // Functions
-/*
- * Counts the character in a file.
- * @param: char * (fileName) the name of the file.
- * @return: int (counter) the total counted characters
- */
-unsigned int fileCharacters(char *fileName);
-
 /*
  * Reads hex from the header of a BMP file and converts it to decimal. Can handle up to 4 bytes and does not rely on type.
  * @param: const char * (header) the header array, unsigned char (startPos) the starting point in the array, unsigned char (bytesToRead) the amount of bytes to read out of the header
  * @return: int (decimal) the decimal number read out of the BMP
  */
-int decimalFromHeader(const char *header, unsigned char startPos, unsigned char bytesToRead); // MFR
-
-/*
- * Converts a string to all lowercase, string is edited directly if you would like to keep a copy of the original string you need to make it yourself.
- * @param: char * (str) a pointer to the string
- * @return: void
- */
-void lowerStr(char *str);
-
-/*
- * Prints help output.
- * @param: void
- * @return: void
- */
-void printHelp(void);
-
-/*
- * TBD
- */
-char checkFile(char *fileName, char *fileExtension, char terminate);
-
-/*
- * TBD
- */
-int indexOf(const char *str, char character);
-
-/*
- * TBD
- */
-void subString(char *str_source, char *str_destination, int startPos, int length);
-
-/*
- * Allows binary notation
- * https://stackoverflow.com/a/15114188/4620857
- */
-static inline unsigned long long S_to_binary_(const char *s);
+int decimalFromHeader(const char *header, unsigned int startPos, unsigned char bytesToRead); // MFR
 
 // Main
 /*
@@ -89,267 +51,215 @@ static inline unsigned long long S_to_binary_(const char *s);
  * - /o [OUTPUT FILE} :: output file, either .txt OR .bmp
  * - /k [KEY] :: encryption key, a key between 0 and 127 for the basic Caesar Cipher, a offset for the characters in ASCII format (0 - 127)
  */
-int main(const int argc, char *const argv[])
+int main(const int argc, char *argv[])
 {
-	myLog(1, __FILE__, __LINE__, 0, "Program running: clearing log."); // This clears the log, do NOT clear it anymore.
-	printf("Hello %s\nWelcome to TIED.\n\n", getenv("USERNAME"));
-	// TESTING //
-	// https://stackoverflow.com/questions/22253074/how-to-play-or-open-mp3-or-wav-sound-file-in-c-program
-	//PlaySound(TEXT("boss_battle_#2.mp3"), NULL, SND_FILENAME | SND_ASYNC);
-	//system("pause");
-	char string[] = "TEST - test"; // MFR
-	lowerStr(string); // MFR
-	printf("%s\n", string); // MFR
-
-	myLog(1, __FILE__, __LINE__, 1, "%s", "This is a test."); // MFR
-	myLog(2, __FILE__, __LINE__, 1, "%s", "This is a test."); // MFR
-	myLog(3, __FILE__, __LINE__, 1, "%s", "This is a test."); // MFR
-	myLog(-1, __FILE__, __LINE__, 1, "%s", "This is a test."); // MFR
-
-	printf("Characters counted: %i\n", fileCharacters("TestFile.txt")); // MFR
-
 	FILE *image = NULL;
-	char header[54];
-	int width = 0;
-	int height = 0;
-	int size = 0;
+	char input = '\0';
 
-	image = fopen("TestImage.bmp", "rb"); // Need a way to escape '\' from path. Or convert '\' to '/' (<- more portable).
-
-	if (image == NULL)
-	{
-		printf("Failed to open image\n");
-		myLog(3, __FILE__, __LINE__, 1, "Failed to open: %s", "TestImage.bmp"); // Change "TestImage.bmp" to string with custom image name.
-		exit(EXIT_FAILURE);
-	}
-
-	fread(header, sizeof(unsigned char), 54, image);
-
-	size = (int) decimalFromHeader(header, 2, 4); // MFR
-	width = (int) decimalFromHeader(header, 18, 4); // MFR
-	height = (int) decimalFromHeader(header, 22, 4); // MFR
-
-
-	printf("Width: %i\nHeight: %i\nSize: %i\n", width, height, size); // MFR
-	int test = decimalFromHeader(header, 0, 4); // MFR
-	printf("%i\tSizeOf: %i\n", test, sizeof(unsigned long long)); // MFR
-	myLog(1, __FILE__, __LINE__, 1, "%s", "-- END OF TEST --"); // MFR
-	// END OF TESTING //
-
+	// Argument pointers
+	char encrypt = -1; // Whether to encrypt or decrypt
 	char *imageP = NULL; // BMP image pointer input
 	char *outputP = NULL; // Pointer output
-	char *textP = NULL; // TXT file pointer, either in- or output
+	char *textP = NULL; // TXT file pointer input
+	short key = 0; // Caesar Cipher key, must be between 0 and 127
+	// Header data
+	int dataOffset = 0;
+//	short bitsPerPixel = 0;
+	int imageSize = 0;
+	// Data storage arrays
+	char header[54] = {'\0'};
+	char *imageData = NULL;
 
-	unsigned char key = 0; // Caesar Cipher key, must be between 0 and 127
-	char encrypt = -1; // Whether to encrypt or decrypt
+	liLog(1, __FILE__, __LINE__, 0, "Program running: clearing log."); // This clears the log, do NOT clear it anymore.
+	printf("Hello %s\nWelcome to TIED.\n\n", getenv("USERNAME")); // Welcomes to user
 
-	if (argc <= 1)
+	// Resolving arguments
+	if (argc <= 1) // Making sure there are arguments
 	{
 		printf("To few arguments: %i.\nRun /help for more info.\nTerminating program.\n", argc);
 		printHelp();
-		myLog(3, __FILE__, __LINE__, 1, "User did not enter enough arguments: %i", argc);
+		liLog(3, __FILE__, __LINE__, 1, "User did not enter enough arguments: %i", argc);
 		exit(EXIT_FAILURE);
 	}
 	else
 	{
-		for (int i = 1; i < argc; i++)
+		for (int i = 1; i < argc; i++) // Setting any command to lowercase
 		{
-			if (strstr(argv[i], "/"))
+			if (argv[i][0] == '/') // Checking the first position so it is a command and not a path that contains '/'
 			{
 				lowerStr(argv[i]);
 			}
 		}
 
+		printf("Commands.\n");
+
 		for (int i = 1; i < argc; i++) // Loading arguments into local variables
 		{
-			if (!strcmp(argv[i], "/help"))
+			if (strcmp(argv[i], "/help") == 0) // strcmp returns 0 if strings match // User want's help, does not matter where it is requested, this exits to program
 			{
-				myLog(1, __FILE__, __LINE__, 1, "User requested help. Printing & exiting.");
+				liLog(1, __FILE__, __LINE__, 1, "User requested help. Printing & exiting.");
 				printHelp();
-				exit(EXIT_SUCCESS);
+				exit(EXIT_SUCCESS); // Since only help was requested this was successful
 			}
-			else if (!strcmp(argv[i], "/e"))
+			else if ((strcmp(argv[i], "/e") == 0) && (encrypt == -1)) // Encrypting, if encrypt is not -1 it is already decrypting
 			{
 				i++;
 				imageP = argv[i];
-				checkFile(imageP, "bmp", 1);
 				encrypt = 1;
-				myLog(1, __FILE__, __LINE__, 1, "Encrypting: %s.", imageP);
+				printf("Encrypting: %s.\n", imageP);
+				liLog(1, __FILE__, __LINE__, 1, "Encrypting: %s.", imageP);
 			}
-			else if (!strcmp(argv[i], "/d"))
+			else if ((strcmp(argv[i], "/d") == 0) && (encrypt == -1)) // Decrypting, if encrypt is not -1 it is already encrypting
 			{
 				i++;
 				imageP = argv[i];
-				checkFile(imageP, "bmp", 1);
 				encrypt = 0;
-				myLog(1, __FILE__, __LINE__, 1, "Decrypting: %s.", imageP);
+				printf("Decrypting: %s.\n", imageP);
+				liLog(1, __FILE__, __LINE__, 1, "Decrypting: %s.", imageP);
 			}
-			else if (!strcmp(argv[i], "/t"))
+			else if (strcmp(argv[i], "/t") == 0) // Text file as in or output, depends on encryption setting
 			{
 				i++;
 				textP = argv[i];
-				checkFile(textP, "txt", 1);
-				myLog(1, __FILE__, __LINE__, 1, "Text file: %s.", textP);
+				printf("Text file: %s.\n", textP);
+				liLog(1, __FILE__, __LINE__, 1, "Text file: %s.", textP);
 			}
-			else if (!strcmp(argv[i], "/o"))
+			else if (strcmp(argv[i], "/o") == 0) // Output file, either bmp or txt, depends on encryption setting
 			{
 				i++;
 				outputP = argv[i];
-				myLog(1, __FILE__, __LINE__, 1, "Output file: %s.", outputP);
+				printf("Output file: %s.\n", outputP);
+				liLog(1, __FILE__, __LINE__, 1, "Output file: %s.", outputP);
 			}
-			else if (!strcmp(argv[i], "/k"))
+			else if (strcmp(argv[i], "/k") == 0) // Key for Caesar Cipher (shifting)
 			{
 				i++;
-				key = *argv[i];
+				key = (short) strtol(argv[i], NULL, 10);
 				// Obviously storing the key as plain text is not a good idea, but it is not a safe/secure encryption anyway, this way you can find the key back if you forget it.
-				myLog(1, __FILE__, __LINE__, 1, "Key: %i.", key);
+				liLog(1, __FILE__, __LINE__, 1, "Key: %d.", key);
 			}
-			else
+			else // Argument is not known, exiting
 			{
 				printf("Unknown argument: %s.\nRun /help for more info.\nTerminating program.\n", argv[i]);
 				printHelp();
-				myLog(3, __FILE__, __LINE__, 1, "Unknown argument: %s.", argv[i]);
+				liLog(3, __FILE__, __LINE__, 1, "Unknown argument: %s.", argv[i]);
 				exit(EXIT_FAILURE);
 			}
 		}
 	}
-}
 
-unsigned int fileCharacters(char *fileName)
-{
-	FILE *file = NULL;
-	unsigned int counter = 0;
-	char charStorage = '\0';
-
-	file = fopen(fileName, "r");
-
-	if (file == NULL)
+	// Checking arguments
+	// File extension & existence
+	checkFile(imageP, "bmp", 1, 1); // If wrong program is terminated, must exist
+	encrypt ? checkFile(textP, "txt", 1, 1) : 0;
+	if (!(encrypt ? checkFile(outputP, "bmp", 0, 0) : checkFile(outputP, "txt", 0, 0))) // Does not need to exist
 	{
-		myLog(2, __FILE__, __LINE__, 1, "Could not open: %s", fileName);
-		return 0;
+		printf("File: %s,\ndoes not have the correct extension.\nTerminating program.\n", _fullpath(NULL, outputP, _MAX_PATH));
+		liLog(3, __FILE__, __LINE__, 1, "Output file is not correct.");
+		exit(EXIT_FAILURE);
+	}
+	// Key range
+	if (key < 0 || key > 127)
+	{
+		printf("Key (%d) out of bounds: 0 - 127 (incl).\nTerminating program.\n", key);
+		liLog(3, __FILE__, __LINE__, 1, "Key (%d) out of bounds.", key);
+		exit(EXIT_FAILURE);
 	}
 
-	for (charStorage = (char) fgetc(file); charStorage != EOF; charStorage = (char) fgetc(file))
+	// Confirming settings
+	printf("Do you want to continue with these settings? (y/n)\n");
+	do
 	{
-		counter++;
+		scanf(" %c", &input);
+		fflush(stdin);
+		lowerStr(&input);
+		if (input == 'n')
+		{
+			printf("Terminating program");
+			liLog(1, __FILE__, __LINE__, 1, "User requested termination of program.");
+			exit(EXIT_SUCCESS); // Since the user asked for it
+		}
+	} while (input != 'y');
+
+	// Opening image
+	image = fopen(_fullpath(NULL, imageP, _MAX_PATH), "rb"); // Need a way to escape '\' from path. Or convert '\' to '/' (<- more portable). // NM, use this: _fullpath(NULL, fileName, _MAX_PATH)
+	// Check if image is opened
+	if (image == NULL)
+	{
+		printf("Failed to open image\n");
+		liLog(3, __FILE__, __LINE__, 1, "Failed to open: %s", _fullpath(NULL, imageP, _MAX_PATH)); // Change "TestImage.bmp" to string with custom image name.
+		exit(EXIT_FAILURE);
 	}
+	// Read header
+	fread(header, sizeof(unsigned char), 54, image);
+	// Get data from header
+	dataOffset = *(int *) &header[10];
+	imageSize = *(int *) &header[34];
+//	dataOffset = (int) decimalFromHeader(header, 10, 4); // ref
+//	imageSize = (int) decimalFromHeader(header, 34, 4);
+	// Allocate memory
+	imageData = malloc(sizeof(char) * (imageSize));
+	// Checking if memory allocation was successful
+	if (!imageData)
+	{
+		printf("Failed to allocate memory\n");
+		liLog(3, __FILE__, __LINE__, 1, "Failed to allocate memory.");
+		exit(EXIT_FAILURE);
+	}
+	// Set memory values
+	memset(imageData, 0, sizeof(char) * (imageSize));
+	// Read image data
+//	fread(offsetData, sizeof(unsigned char), dataOffset - 54, image); // Useless to keep but needed to set the next fread start position correctly // ref
+	fseek(image, dataOffset, SEEK_SET); // Start at the beginning of the file then go dataOffset bytes further end leave the pointer there
+	fread(imageData, sizeof(unsigned char), imageSize, image);
 
-	fclose(file);
+	// Old test code, here for reference
+//	bitsPerPixel = (short) decimalFromHeader(header, 28, 2); // 24 BPP has an offset to get rows of 32 bytes
+//	short signature = (short) decimalFromHeader(header, 0, 2);
+//	int fileSize = (int) decimalFromHeader(header, 2, 4);
+//	int reserved = (int) decimalFromHeader(header, 6, 4);
+//	int size = (int) decimalFromHeader(header, 14, 4); // Size of info header, 40 bytes contain all info however this seems to be equal to data offset - 14 (header size)
+//	int width = (int) decimalFromHeader(header, 18, 4);
+//	int height = (int) decimalFromHeader(header, 22, 4);
+//	short planes = (short) decimalFromHeader(header, 26, 2);
+//	int compression = (int) decimalFromHeader(header, 30, 4);
+//	int xPixelsPerM = (int) decimalFromHeader(header, 38, 4);
+//	int yPixelsPerM = (int) decimalFromHeader(header, 42, 4);
+//	int colorsUsed = (int) decimalFromHeader(header, 46, 4);
+//	int importantColors = (int) decimalFromHeader(header, 50, 4);
 
-	myLog(1, __FILE__, __LINE__, 1, "Characters counted in: %s: %i", fileName, counter);
+//	int firstPixel = decimalFromHeader(imageData, 0, bitsPerPixel / 8); // Do a check to make sure the image has at least 8 bits per pixel
+//	int lastPixel = decimalFromHeader(imageData, imageSize - 1, 1);
+//	printf("Data Offset: %i\n", dataOffset);
+//	printf("bitsPerPixel: %i\n", bitsPerPixel);
+//	printf("%i ::: %i\n", firstPixel, lastPixel);
 
-	return counter;
+	// Free memory
+	free(imageData);
+	// Exit
+	return 0;
 }
 
-int decimalFromHeader(const char *header, unsigned char startPos, unsigned char bytesToRead) // This works but is overcomplicated and uses large data types // MFR
+
+int decimalFromHeader(const char *header, unsigned int startPos, unsigned char bytesToRead) // This works but is overcomplicated and uses large data types // MFR
 {
 	int decimal = 0;
-	// https://docs.oracle.com/cd/E19455-01/806-0477/chapter3-10/index.html
-	uintptr_t base = 1; // Needs long long because base can go to 68719476736 if 4 bytes are being read, long gives only 4 bytes on 32 bit OS
+	// https://docs.oracle.com/cd/E19455-01/806-0477/chapter3-10/index.html // uintptr_t
+	unsigned long long base = 1; // Needs long long because base can go to 68719476736 if 4 bytes are being read, long gives only 4 bytes on 32 bit OS
 	unsigned char nybbleStorage = '\0';
 	unsigned char nybbleMask = B(00001111);
 
-	for (int i = (int) startPos; i <= (startPos + bytesToRead); i++)
+	for (unsigned int i = startPos; i < (startPos + bytesToRead); i++)
 	{
 		for (char j = 0; j < 2; j++)
 		{
 			nybbleStorage = (unsigned char) (header[i] & (nybbleMask << (j * 4))) >> (j * 4);
 			decimal += (int) ((unsigned long long) nybbleStorage * base);
-			myLog(1, __FILE__, __LINE__, 1, "nybbleStorage: %hu\tShift 1: %i\tShift 2: %i\tDecimal: %i\tBase: %llu", nybbleStorage, (j * 4), (4 - (j * 4)), decimal, base);
+			liLog(1, __FILE__, __LINE__, 1, "nybbleStorage: %hu\tShift 1: %i\tShift 2: %i\tDecimal: %i\tBase: %llu", nybbleStorage, (j * 4), (4 - (j * 4)), decimal, base);
 			base *= 16;
 		}
 	}
 
-	myLog(1, __FILE__, __LINE__, 1, "Returning from decimalFromHeader: %i", decimal);
+	liLog(1, __FILE__, __LINE__, 1, "Returning from decimalFromHeader: %i", decimal);
 	return decimal;
-}
-
-void lowerStr(char *str)
-{
-	for (size_t i = 0; i < strlen(str); i++)
-	{
-		str[i] = (char) tolower(str[i]);
-	}
-}
-
-void printHelp(void)
-{
-	printf("\nProject TIED, help overview.\n");
-	printf("This program can encrypt or decrypt a BMP file with text and a given Caesar Cipher.\n");
-	printf("Commands:\n");
-	printf("- /help :: commands overview (this)\n");
-	printf("- /e [IMAGE] :: encrypt :: REQUIRES: /t, /o, /k\n");
-	printf("- /d [IMAGE] :: decrypt :: REQUIRES: /o, /k\n");
-	printf("- /t [TEXT FILE] :: text file\n");
-	printf("- /o [OUTPUT FILE] :: output file, either .txt OR .bmp\n");
-	printf("- /k [KEY] :: encryption key, a key between 0 and 127 for the basic Caesar Cipher,\n\ta offset for the characters in ASCII format (0 - 127)\n");
-}
-
-char checkFile(char *fileName, char *fileExtension, char terminate)
-{
-	myLog(1, __FILE__, __LINE__, 1, "Checking file: %s.", _fullpath(NULL, fileName, _MAX_PATH));
-
-	int index = indexOf(fileName, '.');
-	if (index < 0)
-	{
-		printf("Unable to check file: %s.\nTerminating program.\n", _fullpath(NULL, fileName, _MAX_PATH));
-		myLog(3, __FILE__, __LINE__, 1, "Unable to check file: %s.", _fullpath(NULL, fileName, _MAX_PATH));
-		exit(EXIT_FAILURE);
-	}
-	char extension[(strlen(fileName) - index)];
-
-	subString(fileName, extension, index + 1, (int) (strlen(fileName) - index));
-
-	if ((strcmp(extension, fileExtension) != 0) || (access(fileName, F_OK) != 0))
-	{
-		myLog(2, __FILE__, __LINE__, 1, "Wrong file extension or non existing: %s :: %s.", _fullpath(NULL, fileName, _MAX_PATH), fileExtension);
-		if (terminate)
-		{
-			myLog(3, __FILE__, __LINE__, 1, "Termination of program requested.");
-			printf("File: %s,\ndoes not have %s as extension or does not exist.\nTerminating program.\n", _fullpath(NULL, fileName, _MAX_PATH), fileExtension);
-			exit(EXIT_FAILURE);
-		}
-		else
-		{
-			return 0;
-		}
-	}
-	else
-	{
-		return 1;
-	}
-}
-
-int indexOf(const char *str, char character)
-{
-	int index = -1;
-	char tmpCharacterStorage = '\0';
-	printf("%i\n", strlen(str));
-	for (int i = 0; i < (int) strlen(str); i++)
-	{
-		tmpCharacterStorage = str[i];
-		if (tmpCharacterStorage == character) // !strcmp(&tmpCharacterStorage, &character) <== this does not work, use == instead.
-		{
-			index = i;
-		}
-	}
-	myLog(1, __FILE__, __LINE__, 1, "Index of: \"%c\" in: %s: %i.", character, str, index);
-	return index;
-}
-
-void subString(char *str_source, char *str_destination, int startPos, int length)
-{
-	memcpy(str_destination, &str_source[startPos], length + 1);
-	myLog(1, __FILE__, __LINE__, 1, "Substring from: %s: %s.", str_source, str_destination);
-}
-
-static inline unsigned long long S_to_binary_(const char *s)
-{
-	unsigned long long i = 0;
-	while (*s)
-	{
-		i <<= 1;
-		i += *s++ - '0';
-	}
-	return i;
 }

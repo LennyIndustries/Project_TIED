@@ -4,7 +4,7 @@
  */
 
 // Libraries
-#include "myLog.h"
+#include "lilog.h"
 
 struct
 {
@@ -12,7 +12,7 @@ struct
 	unsigned char append: 1;
 } myLogData;
 
-void myLog(char logLevel, char *file, unsigned int line, char append, const char *message, ...) // Add bitfield support
+void liLog(char logLevel, char *file, unsigned int line, char append, const char *message, ...) // Add bitfield support
 {
 	// A big ball of wibbly wobbly, timey wimey stuff.
 	char dateTime[22] = {'\0'};
@@ -35,11 +35,11 @@ void myLog(char logLevel, char *file, unsigned int line, char append, const char
 			logLevelString = "CRIT";
 			break;
 		default:
-			myLog(2, file, line, 1, "Could not resolve log level: %i.", logLevel);
+			liLog(2, file, line, 1, "Could not resolve log level: %i.", logLevel);
 			return;
 	}
 
-	myLogFile = fopen(OUTPUTFILENAME, append ? "a" : "w"); // Opens the log file
+	myLogFile = fopen(LILOG_OUTPUTFILENAME, append ? "a" : "w"); // Opens the log file
 
 	if (myLogFile == NULL) // Check if the file is opened
 	{
