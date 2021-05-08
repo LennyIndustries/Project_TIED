@@ -12,7 +12,6 @@
 
 // Libraries
 // Own
-#include "TIEDlib.h"
 /*
  * This header contains the following headers:
  * - stdio.h
@@ -23,6 +22,7 @@
  * - ctype.h
  * - unistd.h
  */
+#include "TIEDlib.h"
 
 // Standard
 //#include <limits.h>
@@ -30,8 +30,9 @@
 #include <stdint.h>
 
 // Definitions
-#define START 0x2 // STX :: 0000 0010 :: 2
-#define STOP 0x3 // ETX :: 0000 0011 :: 3
+#define ENCRYPTED 0x18 // CAN (Cancel) :: 0001 1000 :: 24 // Place this in BMP header @6 - 10, unused data <- check if there to prevent encrypting an already encrypted image
+#define SOD 0x2 // STX :: 0000 0010 :: 2 // Decrypt first, the encryption is applied to this as well, if not the text might be encrypted to one of these characters
+#define EOD 0x3 // ETX :: 0000 0011 :: 3 // Encryption does not allow for the use of the first 4 ASCII characters in text file to be encrypted
 
 // Functions
 /*
@@ -61,7 +62,7 @@ int main(const int argc, char *argv[])
 	char *imageP = NULL; // BMP image pointer input
 	char *outputP = NULL; // Pointer output
 	char *textP = NULL; // TXT file pointer input
-	short key = 0; // Caesar Cipher key, must be between 0 and 127
+	unsigned char key = 0; // Caesar Cipher key, must be between 0 and 127
 	// Header data
 	int dataOffset = 0;
 //	short bitsPerPixel = 0;
@@ -69,6 +70,8 @@ int main(const int argc, char *argv[])
 	// Data storage arrays
 	char header[54] = {'\0'};
 	char *imageData = NULL;
+
+	printf("%i\n", sizeOfArray(header));
 
 	liLog(1, __FILE__, __LINE__, 0, "Program running: clearing log."); // This clears the log, do NOT clear it anymore.
 	printf("Hello %s\nWelcome to TIED.\n\n", getenv("USERNAME")); // Welcomes to user
@@ -134,7 +137,7 @@ int main(const int argc, char *argv[])
 			else if (strcmp(argv[i], "/k") == 0) // Key for Caesar Cipher (shifting)
 			{
 				i++;
-				key = (short) strtol(argv[i], NULL, 10);
+				key = strtol(argv[i], NULL, 10);
 				// Obviously storing the key as plain text is not a good idea, but it is not a safe/secure encryption anyway, this way you can find the key back if you forget it.
 				liLog(1, __FILE__, __LINE__, 1, "Key: %d.", key);
 			}
@@ -159,14 +162,15 @@ int main(const int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 	// Key range
-	if (key < 0 || key > 127)
+	if (key > 95)
 	{
-		printf("Key (%d) out of bounds: 0 - 127 (incl).\nTerminating program.\n", key);
+		printf("Key (%d) out of bounds: 0 - 95 (incl).\nTerminating program.\n", key);
 		liLog(3, __FILE__, __LINE__, 1, "Key (%d) out of bounds.", key);
 		exit(EXIT_FAILURE);
 	}
 
 	// Confirming settings
+	printf("Key: %i\n", key);
 	printf("Do you want to continue with these settings? (y/n)\n");
 	do
 	{
@@ -233,6 +237,54 @@ int main(const int argc, char *argv[])
 //	printf("Data Offset: %i\n", dataOffset);
 //	printf("bitsPerPixel: %i\n", bitsPerPixel);
 //	printf("%i ::: %i\n", firstPixel, lastPixel);
+
+	// TEST CODE //
+	char *testOut = NULL;
+	testOut = malloc(sizeof(char) * (strlen(imageP)));
+	memset(testOut, '0', sizeof(char) * (strlen(imageP)));
+
+	printf("%i :: %i\n", strlen(imageP), strlen(testOut));
+
+	imageP[5] = 5;
+	imageP[2] = 127;
+	imageP[10] = 117;
+	imageP[8] = 95;
+	printf("Encrypting %s :: ", imageP);
+	caesarCipherS(imageP, testOut, 1, 10);
+
+	printf("%s\n", testOut);
+	printf("%i :: %i\n", strlen(imageP), strlen(testOut));
+	printf("Decrypting %s :: ", testOut);
+	caesarCipherS(testOut, imageP, 0, 10);
+	printf("%s\n", imageP);
+
+	fileCharacters("TestFile.txt");
+	free(testOut);
+
+	printf("%c\n", 5);
+
+
+	//Does not work for some reason is takes more characters that there are in the array
+//	char testIn[6] = {'\0'};
+//	char testOut2[6] = {'\0'};
+//
+//	testIn[0] = 'T';
+//	testIn[1] = 'e';
+//	testIn[2] = 's';
+//	testIn[3] = 't';
+//	testIn[4] = '1';
+//	testIn[5] = '2';
+//
+//	printf("%i :: %i\n", sizeof(testIn), sizeof(testOut2));
+//	printf("Encrypting %s :: ", testIn);
+//	caesarCipherA(testIn, testOut2, 1, 50);
+//
+//	printf("%s\n", testOut2);
+//	printf("%i :: %i\n", sizeof(testIn), sizeof(testOut2));
+//	printf("Decrypting %s :: ", testOut2);
+//	caesarCipherA(testOut2, testIn, 0, 50);
+//	printf("%s\n", testIn);
+	// END OF TEST CODE //
 
 	// Free memory
 	free(imageData);

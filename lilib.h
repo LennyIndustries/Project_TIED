@@ -7,7 +7,6 @@
 #define PROJECT_TIED_LILIB_H
 
 // Libraries
-#include "lilog.h"
 /*
  * This header contains the following headers:
  * - stdio.h
@@ -15,11 +14,14 @@
  * - time.h
  * - stdarg.h
  */
+#include "lilog.h"
 #include <string.h>
 #include <ctype.h>
 
 // Definitions
+// Allows for binary notation: B(00101101)
 #define B(x) S_to_binary_(#x) // https://stackoverflow.com/a/15114188/4620857
+#define sizeOfArray(x) (sizeof(x) / sizeof((x)[0]))
 
 // Functions
 /*
