@@ -245,10 +245,9 @@ int main(const int argc, char *argv[])
 
 	printf("%i :: %i\n", strlen(imageP), strlen(testOut));
 
-	imageP[5] = 5;
-	imageP[2] = 127;
-	imageP[10] = 117;
-	imageP[8] = 95;
+	imageP[0] = 1;
+	imageP[1] = 127;
+
 	printf("Encrypting %s :: ", imageP);
 	caesarCipherS(imageP, testOut, 1, 10);
 
@@ -260,9 +259,6 @@ int main(const int argc, char *argv[])
 
 	fileCharacters("TestFile.txt");
 	free(testOut);
-
-	printf("%c\n", 5);
-
 
 	//Does not work for some reason is takes more characters that there are in the array
 //	char testIn[6] = {'\0'};

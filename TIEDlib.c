@@ -79,7 +79,8 @@ char checkFile(char *fileName, char *fileExtension, char terminate, char existin
 	}
 }
 
-char caesarCipherF(char *input, unsigned int inputLength, char *output, unsigned int outputLength, unsigned char encrypt, unsigned char key) // Encrypts character to NULL, ending the return array early
+// Encrypts character to NULL, ending the return array early <- should be fixed
+char caesarCipherF(char *input, unsigned int inputLength, char *output, unsigned int outputLength, unsigned char encrypt, unsigned char key)
 {
 	if (inputLength != outputLength) // Checks if both arrays are of the same size
 	{
@@ -93,17 +94,18 @@ char caesarCipherF(char *input, unsigned int inputLength, char *output, unsigned
 
 	for (unsigned int i = 0; i < inputLength; i++) // Encrypts / decrypts the input to the output
 	{
-		if (encrypt && (input[i] <= 4)) // The first 4 character of the ASCII table are not allowed to be in text file, these are used as limiters by the program
+		if (encrypt && (input[i] == 0)) // The first character of the ASCII table (NULL) is not allowed to be in the input while encrypting, though the input should never have this anyway
 		{
-			printf("The text contains forbidden characters.\nTerminating program.");
-			liLog(3, __FILE__, __LINE__, 1, "Forbidden character in text (%c).", input[i]);
+			printf("Unable to encrypt, input contains an illegal character (%c).\nTerminating program.", input[i]);
+			liLog(3, __FILE__, __LINE__, 1, "Input contains an illegal character (%c).", input[i]);
 			exit(EXIT_FAILURE);
 		}
-		storage[i] = (input[i] + (encrypt ? 0 : (-1))); // Copy input to storage
-		storage[i] += (encrypt ? 0 : ((storage[i] <= key) ? 126 : 0)); // Adds 127 if decrypting and the value is <= to key
+		storage[i] = (encrypt ? input[i] : (((input[i] + 125) > 127) ? ((input[i] + 125) % 127) : (input[i] + 125))); // Decompress to 0 - 127 range & copy input to storage
+		storage[i] += (encrypt ? 0 : ((storage[i] <= key) ? 127 : 0)); // Adds 127 if decrypting and the value is <= to key
 		storage[i] += (encrypt ? key : (-key)); // Applies the key
 		storage[i] %= (encrypt ? 127 : 256); // Applies rest division
-		output[i] = (char) (storage[i] + (encrypt ? 1 : 0)); // Converts storage to char and copies it to output
+		storage[i] = (encrypt ? (((storage[i] + 1) % 127) + 1) : storage[i]); // Compress to 1 - 127 range <- NULL is not allowed as input
+		output[i] = (char) storage[i]; // Converts storage to char and copies it to output
 		liLog(1, __FILE__, __LINE__, 1, "%s '%c' to '%c': key: %i.", (encrypt ? "Encrypted" : "Decrypted"), input[i], output[i], key); // Log encryption / decryption
 	}
 
