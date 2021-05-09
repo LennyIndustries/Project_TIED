@@ -21,6 +21,7 @@
  * - string.h
  * - ctype.h
  * - unistd.h
+ * - math.h
  */
 #include "TIEDlib.h"
 
@@ -30,9 +31,7 @@
 #include <stdint.h>
 
 // Definitions
-#define ENCRYPTED 0x18 // CAN (Cancel) :: 0001 1000 :: 24 // Place this in BMP header @6 - 10, unused data <- check if there to prevent encrypting an already encrypted image
-#define SOD 0x2 // STX :: 0000 0010 :: 2 // Decrypt first, the encryption is applied to this as well, if not the text might be encrypted to one of these characters
-#define EOD 0x3 // ETX :: 0000 0011 :: 3 // Encryption does not allow for the use of the first 4 ASCII characters in text file to be encrypted
+//#define DEBUG
 
 // Functions
 /*
@@ -40,7 +39,8 @@
  * @param: const char * (header) the header array, unsigned char (startPos) the starting point in the array, unsigned char (bytesToRead) the amount of bytes to read out of the header
  * @return: int (decimal) the decimal number read out of the BMP
  */
-int decimalFromHeader(const char *header, unsigned int startPos, unsigned char bytesToRead); // MFR
+// Reference
+//int decimalFromHeader(const char *header, unsigned int startPos, unsigned char bytesToRead); // MFR
 
 // Main
 /*
@@ -54,24 +54,13 @@ int decimalFromHeader(const char *header, unsigned int startPos, unsigned char b
  */
 int main(const int argc, char *argv[])
 {
-	FILE *image = NULL;
 	char input = '\0';
-
 	// Argument pointers
 	char encrypt = -1; // Whether to encrypt or decrypt
 	char *imageP = NULL; // BMP image pointer input
 	char *outputP = NULL; // Pointer output
 	char *textP = NULL; // TXT file pointer input
 	unsigned char key = 0; // Caesar Cipher key, must be between 0 and 127
-	// Header data
-	int dataOffset = 0;
-//	short bitsPerPixel = 0;
-	int imageSize = 0;
-	// Data storage arrays
-	char header[54] = {'\0'};
-	char *imageData = NULL;
-
-	printf("%i\n", sizeOfArray(header));
 
 	liLog(1, __FILE__, __LINE__, 0, "Program running: clearing log."); // This clears the log, do NOT clear it anymore.
 	printf("Hello %s\nWelcome to TIED.\n\n", getenv("USERNAME")); // Welcomes to user
@@ -90,7 +79,7 @@ int main(const int argc, char *argv[])
 		{
 			if (argv[i][0] == '/') // Checking the first position so it is a command and not a path that contains '/'
 			{
-				lowerStr(argv[i]);
+				strToLower(argv[i]);
 			}
 		}
 
@@ -109,30 +98,30 @@ int main(const int argc, char *argv[])
 				i++;
 				imageP = argv[i];
 				encrypt = 1;
-				printf("Encrypting: %s.\n", imageP);
-				liLog(1, __FILE__, __LINE__, 1, "Encrypting: %s.", imageP);
+				printf("Encrypting: %s.\n", _fullpath(NULL, imageP, _MAX_PATH));
+				liLog(1, __FILE__, __LINE__, 1, "Encrypting: %s.", _fullpath(NULL, imageP, _MAX_PATH));
 			}
 			else if ((strcmp(argv[i], "/d") == 0) && (encrypt == -1)) // Decrypting, if encrypt is not -1 it is already encrypting
 			{
 				i++;
 				imageP = argv[i];
 				encrypt = 0;
-				printf("Decrypting: %s.\n", imageP);
-				liLog(1, __FILE__, __LINE__, 1, "Decrypting: %s.", imageP);
+				printf("Decrypting: %s.\n", _fullpath(NULL, imageP, _MAX_PATH));
+				liLog(1, __FILE__, __LINE__, 1, "Decrypting: %s.", _fullpath(NULL, imageP, _MAX_PATH));
 			}
 			else if (strcmp(argv[i], "/t") == 0) // Text file as in or output, depends on encryption setting
 			{
 				i++;
 				textP = argv[i];
-				printf("Text file: %s.\n", textP);
-				liLog(1, __FILE__, __LINE__, 1, "Text file: %s.", textP);
+				printf("Text file: %s.\n", _fullpath(NULL, textP, _MAX_PATH));
+				liLog(1, __FILE__, __LINE__, 1, "Text file: %s.", _fullpath(NULL, textP, _MAX_PATH));
 			}
 			else if (strcmp(argv[i], "/o") == 0) // Output file, either bmp or txt, depends on encryption setting
 			{
 				i++;
 				outputP = argv[i];
-				printf("Output file: %s.\n", outputP);
-				liLog(1, __FILE__, __LINE__, 1, "Output file: %s.", outputP);
+				printf("Output file: %s.\n", _fullpath(NULL, outputP, _MAX_PATH));
+				liLog(1, __FILE__, __LINE__, 1, "Output file: %s.", _fullpath(NULL, outputP, _MAX_PATH));
 			}
 			else if (strcmp(argv[i], "/k") == 0) // Key for Caesar Cipher (shifting)
 			{
@@ -152,6 +141,14 @@ int main(const int argc, char *argv[])
 	}
 
 	// Checking arguments
+	// Required arguments
+	if ((imageP == NULL) || (outputP == NULL) || (encrypt ? (textP == NULL) : 0))
+	{
+		printf("Missing arguments.\n");
+		printHelp();
+		liLog(3, __FILE__, __LINE__, 1, "Missing arguments.");
+		exit(EXIT_FAILURE);
+	}
 	// File extension & existence
 	checkFile(imageP, "bmp", 1, 1); // If wrong program is terminated, must exist
 	encrypt ? checkFile(textP, "txt", 1, 1) : 0;
@@ -162,9 +159,9 @@ int main(const int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 	// Key range
-	if (key > 95)
+	if (key > 124) // 0 - 124 provide encryption, 125 does not, 128+ breaks the encryption function
 	{
-		printf("Key (%d) out of bounds: 0 - 95 (incl).\nTerminating program.\n", key);
+		printf("Key (%d) out of bounds: 0 - 124 (incl).\nTerminating program.\n", key);
 		liLog(3, __FILE__, __LINE__, 1, "Key (%d) out of bounds.", key);
 		exit(EXIT_FAILURE);
 	}
@@ -176,7 +173,7 @@ int main(const int argc, char *argv[])
 	{
 		scanf(" %c", &input);
 		fflush(stdin);
-		lowerStr(&input);
+		strToLower(&input);
 		if (input == 'n')
 		{
 			printf("Terminating program");
@@ -185,129 +182,33 @@ int main(const int argc, char *argv[])
 		}
 	} while (input != 'y');
 
-	// Opening image
-	image = fopen(_fullpath(NULL, imageP, _MAX_PATH), "rb"); // Need a way to escape '\' from path. Or convert '\' to '/' (<- more portable). // NM, use this: _fullpath(NULL, fileName, _MAX_PATH)
-	// Check if image is opened
-	if (image == NULL)
-	{
-		printf("Failed to open image\n");
-		liLog(3, __FILE__, __LINE__, 1, "Failed to open: %s", _fullpath(NULL, imageP, _MAX_PATH)); // Change "TestImage.bmp" to string with custom image name.
-		exit(EXIT_FAILURE);
-	}
-	// Read header
-	fread(header, sizeof(unsigned char), 54, image);
-	// Get data from header
-	dataOffset = *(int *) &header[10];
-	imageSize = *(int *) &header[34];
-//	dataOffset = (int) decimalFromHeader(header, 10, 4); // ref
-//	imageSize = (int) decimalFromHeader(header, 34, 4);
-	// Allocate memory
-	imageData = malloc(sizeof(char) * (imageSize));
-	// Checking if memory allocation was successful
-	if (!imageData)
-	{
-		printf("Failed to allocate memory\n");
-		liLog(3, __FILE__, __LINE__, 1, "Failed to allocate memory.");
-		exit(EXIT_FAILURE);
-	}
-	// Set memory values
-	memset(imageData, 0, sizeof(char) * (imageSize));
-	// Read image data
-//	fread(offsetData, sizeof(unsigned char), dataOffset - 54, image); // Useless to keep but needed to set the next fread start position correctly // ref
-	fseek(image, dataOffset, SEEK_SET); // Start at the beginning of the file then go dataOffset bytes further end leave the pointer there
-	fread(imageData, sizeof(unsigned char), imageSize, image);
+	encrypt ? encryptImage(imageP, textP, outputP, key) : decryptImage(imageP, outputP, key);
 
-	// Old test code, here for reference
-//	bitsPerPixel = (short) decimalFromHeader(header, 28, 2); // 24 BPP has an offset to get rows of 32 bytes
-//	short signature = (short) decimalFromHeader(header, 0, 2);
-//	int fileSize = (int) decimalFromHeader(header, 2, 4);
-//	int reserved = (int) decimalFromHeader(header, 6, 4);
-//	int size = (int) decimalFromHeader(header, 14, 4); // Size of info header, 40 bytes contain all info however this seems to be equal to data offset - 14 (header size)
-//	int width = (int) decimalFromHeader(header, 18, 4);
-//	int height = (int) decimalFromHeader(header, 22, 4);
-//	short planes = (short) decimalFromHeader(header, 26, 2);
-//	int compression = (int) decimalFromHeader(header, 30, 4);
-//	int xPixelsPerM = (int) decimalFromHeader(header, 38, 4);
-//	int yPixelsPerM = (int) decimalFromHeader(header, 42, 4);
-//	int colorsUsed = (int) decimalFromHeader(header, 46, 4);
-//	int importantColors = (int) decimalFromHeader(header, 50, 4);
-
-//	int firstPixel = decimalFromHeader(imageData, 0, bitsPerPixel / 8); // Do a check to make sure the image has at least 8 bits per pixel
-//	int lastPixel = decimalFromHeader(imageData, imageSize - 1, 1);
-//	printf("Data Offset: %i\n", dataOffset);
-//	printf("bitsPerPixel: %i\n", bitsPerPixel);
-//	printf("%i ::: %i\n", firstPixel, lastPixel);
-
-	// TEST CODE //
-	char *testOut = NULL;
-	testOut = malloc(sizeof(char) * (strlen(imageP)));
-	memset(testOut, '0', sizeof(char) * (strlen(imageP)));
-
-	printf("%i :: %i\n", strlen(imageP), strlen(testOut));
-
-	imageP[0] = 1;
-	imageP[1] = 127;
-
-	printf("Encrypting %s :: ", imageP);
-	caesarCipherS(imageP, testOut, 1, 10);
-
-	printf("%s\n", testOut);
-	printf("%i :: %i\n", strlen(imageP), strlen(testOut));
-	printf("Decrypting %s :: ", testOut);
-	caesarCipherS(testOut, imageP, 0, 10);
-	printf("%s\n", imageP);
-
-	fileCharacters("TestFile.txt");
-	free(testOut);
-
-	//Does not work for some reason is takes more characters that there are in the array
-//	char testIn[6] = {'\0'};
-//	char testOut2[6] = {'\0'};
-//
-//	testIn[0] = 'T';
-//	testIn[1] = 'e';
-//	testIn[2] = 's';
-//	testIn[3] = 't';
-//	testIn[4] = '1';
-//	testIn[5] = '2';
-//
-//	printf("%i :: %i\n", sizeof(testIn), sizeof(testOut2));
-//	printf("Encrypting %s :: ", testIn);
-//	caesarCipherA(testIn, testOut2, 1, 50);
-//
-//	printf("%s\n", testOut2);
-//	printf("%i :: %i\n", sizeof(testIn), sizeof(testOut2));
-//	printf("Decrypting %s :: ", testOut2);
-//	caesarCipherA(testOut2, testIn, 0, 50);
-//	printf("%s\n", testIn);
-	// END OF TEST CODE //
-
-	// Free memory
-	free(imageData);
 	// Exit
+	printf("Exiting TIED.\nGoodbye %s\n", getenv("USERNAME"));
 	return 0;
 }
 
-
-int decimalFromHeader(const char *header, unsigned int startPos, unsigned char bytesToRead) // This works but is overcomplicated and uses large data types // MFR
-{
-	int decimal = 0;
-	// https://docs.oracle.com/cd/E19455-01/806-0477/chapter3-10/index.html // uintptr_t
-	unsigned long long base = 1; // Needs long long because base can go to 68719476736 if 4 bytes are being read, long gives only 4 bytes on 32 bit OS
-	unsigned char nybbleStorage = '\0';
-	unsigned char nybbleMask = B(00001111);
-
-	for (unsigned int i = startPos; i < (startPos + bytesToRead); i++)
-	{
-		for (char j = 0; j < 2; j++)
-		{
-			nybbleStorage = (unsigned char) (header[i] & (nybbleMask << (j * 4))) >> (j * 4);
-			decimal += (int) ((unsigned long long) nybbleStorage * base);
-			liLog(1, __FILE__, __LINE__, 1, "nybbleStorage: %hu\tShift 1: %i\tShift 2: %i\tDecimal: %i\tBase: %llu", nybbleStorage, (j * 4), (4 - (j * 4)), decimal, base);
-			base *= 16;
-		}
-	}
-
-	liLog(1, __FILE__, __LINE__, 1, "Returning from decimalFromHeader: %i", decimal);
-	return decimal;
-}
+// Reference
+//int decimalFromHeader(const char *header, unsigned int startPos, unsigned char bytesToRead) // This works but is overcomplicated and uses large data types // MFR
+//{
+//	int decimal = 0;
+//	// https://docs.oracle.com/cd/E19455-01/806-0477/chapter3-10/index.html // uintptr_t
+//	unsigned long long base = 1; // Needs long long because base can go to 68719476736 if 4 bytes are being read, long gives only 4 bytes on 32 bit OS
+//	unsigned char nybbleStorage = '\0';
+//	unsigned char nybbleMask = B(00001111);
+//
+//	for (unsigned int i = startPos; i < (startPos + bytesToRead); i++)
+//	{
+//		for (char j = 0; j < 2; j++)
+//		{
+//			nybbleStorage = (unsigned char) (header[i] & (nybbleMask << (j * 4))) >> (j * 4);
+//			decimal += (int) ((unsigned long long) nybbleStorage * base);
+//			liLog(1, __FILE__, __LINE__, 1, "nybbleStorage: %hu\tShift 1: %i\tShift 2: %i\tDecimal: %i\tBase: %llu", nybbleStorage, (j * 4), (4 - (j * 4)), decimal, base);
+//			base *= 16;
+//		}
+//	}
+//
+//	liLog(1, __FILE__, __LINE__, 1, "Returning from decimalFromHeader: %i", decimal);
+//	return decimal;
+//}

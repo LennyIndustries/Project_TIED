@@ -35,15 +35,19 @@ unsigned long long S_to_binary_(const char *s);
  * @param: char * (str) a pointer to the string
  * @return: void
  */
-void lowerStr(char *str);
+void strToLower(char *str);
 
 /*
- * TBD
+ * Gets the LAST position of a char in a string.
+ * @param: const char * (str) string to check, char (character) the character to look for
+ * @return: int (index) the LAST position of the character in the string
  */
 int indexOf(const char *str, char character);
 
 /*
- * TBD
+ * Creates a substring from a string.
+ * @param: char * (str_source) the source string, char * (str_destination) the destination string, int (startPos) the starting position, int (length) how long to go from start
+ * @return: void
  */
 void subString(char *str_source, char *str_destination, int startPos, int length);
 

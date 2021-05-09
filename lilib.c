@@ -16,7 +16,7 @@ unsigned long long S_to_binary_(const char *s)
 	return i;
 }
 
-void lowerStr(char *str)
+void strToLower(char *str)
 {
 	for (size_t i = 0; i < strlen(str); i++)
 	{
