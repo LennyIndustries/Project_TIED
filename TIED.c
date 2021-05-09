@@ -185,7 +185,7 @@ int main(const int argc, char *argv[])
 	encrypt ? encryptImage(imageP, textP, outputP, key) : decryptImage(imageP, outputP, key);
 
 	// Exit
-	printf("Exiting TIED.\nGoodbye %s\n", getenv("USERNAME"));
+	printf("\nExiting TIED.\nGoodbye %s\n", getenv("USERNAME"));
 	return 0;
 }
 
