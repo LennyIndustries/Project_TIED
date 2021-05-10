@@ -22,8 +22,8 @@
 
 // Definitions
 #define ENCRYPTED 0x18 // CAN (Cancel) :: 0001 1000 :: 24 // Place this in BMP header @6 - 10, unused data <- check if there to prevent encrypting an already encrypted image
-#define SOD 0x2 // STX :: 0000 0010 :: 2 // Decrypt first, the encryption is applied to this as well, if not the text might be encrypted to one of these characters
-#define EOD 0x3 // ETX :: 0000 0011 :: 3 // Encryption does not allow for the use of the first 4 ASCII characters in text file to be encrypted // only NULL now not allowed
+#define SOD 0x2 // STX (Start Of Text) :: 0000 0010 :: 2 // Decrypt first, the encryption is applied to this as well, if not the text might be encrypted to one of these characters
+#define EOD 0x3 // ETX (End Of Text) :: 0000 0011 :: 3 // Encryption does not allow for the use of the first 4 ASCII characters in text file to be encrypted // only NULL now not allowed
 // Use this to call the caesarCipherF function, it will add the size for you. If you use malloc, be sure to fill the memory with something not NULL!
 // Arrays
 #define caesarCipherA(input, output, encrypt, key) caesarCipherF(input, sizeOfArray(input), output, sizeOfArray(output), encrypt, key)
@@ -40,6 +40,11 @@ char encryptImage(char *imageP, char *textP, char *outputP, unsigned char key);
  * TBD
  */
 char decryptImage(char *image, char *output, unsigned char key);
+
+/*
+ * TBD
+ */
+void getImageData(char *imageP, char **headerReturn, char **dataReturn);
 
 /*
  * Counts the character in a file.

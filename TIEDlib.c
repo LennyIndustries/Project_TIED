@@ -8,7 +8,6 @@
 char encryptImage(char *imageP, char *textP, char *outputP, unsigned char key)
 {
 	// Files
-	FILE *image = NULL;
 	FILE *text = NULL;
 	FILE *output = NULL;
 	// Image data
@@ -25,32 +24,14 @@ char encryptImage(char *imageP, char *textP, char *outputP, unsigned char key)
 	unsigned int fileCharacters = 0;
 	char *textData = NULL;
 	char *encryptedTextData = NULL;
+	// Data copying
+	unsigned char mask = 0x80;
+	unsigned char storageText = 0x00;
+	unsigned char storageImage = 0x00;
 
-	// Opening image
-	image = fopen(_fullpath(NULL, imageP, _MAX_PATH), "rb");
-	// Checking if image is opened
-	if (image == NULL)
-	{
-		printf("Failed to open image: %s.\nTerminating program.\n", _fullpath(NULL, imageP, _MAX_PATH));
-		liLog(3, __FILE__, __LINE__, 1, "Failed to open image: %s.", _fullpath(NULL, imageP, _MAX_PATH));
-		exit(EXIT_FAILURE);
-	}
-
+	// Getting data
 	// Getting data from image
-	// Allocating memory for headerData
-	headerData = malloc(54);
-	// Checking if memory allocation was successful
-	if (!headerData)
-	{
-		printf("Failed to allocate memory.\nTerminating program.\n");
-		liLog(3, __FILE__, __LINE__, 1, "Failed to allocate memory.");
-		fclose(image);
-		exit(EXIT_FAILURE);
-	}
-	// Filling memory
-	memset(headerData, 0, 54);
-	// Reading header data
-	fread(headerData, sizeof(unsigned char), 54, image);
+	getImageData(imageP, &headerData, &imageData);
 	// Getting header data
 	imageFileSize = *(int *) &headerData[2];
 	reserved = *(int *) &headerData[6];
@@ -58,30 +39,6 @@ char encryptImage(char *imageP, char *textP, char *outputP, unsigned char key)
 	with = *(int *) &headerData[18];
 	height = *(int *) &headerData[22];
 	bitsPerPixel = *(short *) &headerData[28];
-	// Freeing memory
-	free(headerData);
-
-	// Getting full header & image data
-	// Allocating memory for headerData & imageData
-	headerData = malloc(sizeof(char) * (dataOffset));
-	imageData = malloc(sizeof(char) * (imageFileSize - dataOffset));
-	// Checking if memory allocation was successful
-	if ((imageData == NULL) || (headerData == NULL))
-	{
-		printf("Failed to allocate memory.\nTerminating program.\n");
-		liLog(3, __FILE__, __LINE__, 1, "Failed to allocate memory.");
-		fclose(image);
-		exit(EXIT_FAILURE);
-	}
-	// Filling memory
-	memset(headerData, 0, sizeof(char) * (dataOffset));
-	memset(imageData, 0, sizeof(char) * (imageFileSize - dataOffset));
-	// Reading image data
-	fseek(image, 0, SEEK_SET); // Start at the beginning of the file then leave the pointer there
-	fread(headerData, sizeof(unsigned char), dataOffset, image);
-	fread(imageData, sizeof(unsigned char), imageFileSize - dataOffset, image);
-	// Closing image
-	fclose(image);
 
 	// Checking file compatibility
 	// Getting total character in text file
@@ -127,7 +84,7 @@ char encryptImage(char *imageP, char *textP, char *outputP, unsigned char key)
 		exit(EXIT_FAILURE);
 	}
 	// Allocating memory for textData
-	textData = malloc(sizeof(char) * (fileCharacters + 0x2)); // 0x2 Contains start of and end of text
+	textData = malloc(sizeof(char) * (fileCharacters + 0x2)); // 0x2 Contains start of and end of text tags
 	// Checking if memory allocation was successful
 	if (textData == NULL)
 	{
@@ -139,16 +96,13 @@ char encryptImage(char *imageP, char *textP, char *outputP, unsigned char key)
 		exit(EXIT_FAILURE);
 	}
 	// Filling memory
-	memset(textData, '\0', sizeof(char) * (fileCharacters + 0x2));
+	memset(textData, '0', sizeof(char) * (fileCharacters + 0x2));
 	// Reading text
 	fread(textData + 0x1, sizeof(char), fileCharacters, text); // Not setting any data on the first byte, reserved for flag
 	// Closing text file
 	fclose(text);
 
 	// Preparing for output
-	// Setting start and stop flags
-	textData[0] = SOD;
-	textData[fileCharacters + 1] = EOD;
 	// Allocating memory for encryptedTextData
 	encryptedTextData = malloc(sizeof(char) * (fileCharacters + 0x2)); // 0x2 Contains start of and end of text
 	// Checking if memory allocation was successful
@@ -166,19 +120,23 @@ char encryptImage(char *imageP, char *textP, char *outputP, unsigned char key)
 	memset(encryptedTextData, '0', sizeof(char) * (fileCharacters + 0x2));
 	// Encrypting text
 	caesarCipherF(textData, (fileCharacters + 0x2), encryptedTextData, (fileCharacters + 0x2), 1, key);
+	// Setting start and stop flags
+	encryptedTextData[0] = SOD;
+	encryptedTextData[fileCharacters + 1] = EOD;
 	// Freeing memory
 	free(textData);
 	// Copying encrypted text data to image data
-	unsigned char mask = 0xFE;
-	unsigned char storageText = 0x00;
-	unsigned char storageImage = 0x00;
+	printf("Copying data, this might take a moment.\n");
 	for (unsigned int i = 0; i < (fileCharacters + 0x2); i++)
 	{
+		printf("\rWorking: %i %%", (int) ceil((i * 100.0) / (fileCharacters + 0x2))); // Progress tracking
+		fflush(stdout);
+
 		for (unsigned char j = 0; j < 8; j++)
 		{
-			storageText = (encryptedTextData[i] | mask); // 1111 1110
-			storageImage = (imageData[j + (8 * i)] | !mask); // 0000 0001
-			imageData[j + (8 * i)] = (char) (storageText & storageImage);
+			storageText = ((encryptedTextData[i] & (mask >> j))) >> (7 - j); // You could remove the 2 variables, but it would become even more unreadable
+			storageImage = (imageData[j + (8 * i)] & ~(mask >> 7));
+			imageData[j + (8 * i)] = (char) (storageImage | storageText);
 		}
 	}
 	printf("\n");
@@ -210,15 +168,197 @@ char encryptImage(char *imageP, char *textP, char *outputP, unsigned char key)
 	free(imageData);
 
 	// Return
-	printf("Finished text to image encryption.\nThe output file can be found here: %s\nKey used to encrypt = %i\n", _fullpath(NULL, outputP, _MAX_PATH), key);
+	printf("\nFinished text to image encryption.\nThe output file can be found here: %s\nKey used to encrypt = %i\n", _fullpath(NULL, outputP, _MAX_PATH), key);
 	return 1;
 }
 
 char decryptImage(char *imageP, char *outputP, unsigned char key)
 {
+	// Files
+	FILE *output = NULL;
+	// Image data
+	char *headerData = NULL;
+	char *imageData = NULL;
+	int reserved = 0;
+	// Text data
+	char *textData = NULL;
+	char *encryptedTextData = NULL;
+	// Text retrieving
+	int counter = 0;
+	char storage = '\0';
+	unsigned char mask = 0x01;
+
+	// Getting data
+	// Getting data from image
+	getImageData(imageP, &headerData, &imageData);
+	// Getting data from header
+	reserved = *(int *) &headerData[6];
+	// Freeing memory
+	free(headerData);
+
+	// Checking image
+	if (reserved != ENCRYPTED)
+	{
+		printf("Image: %s\nis not encrypted or incompatible with program.\nTerminating program.\n", _fullpath(NULL, imageP, _MAX_PATH));
+		liLog(3, __FILE__, __LINE__, 1, "Image: %s is not encrypted or incompatible with program.", _fullpath(NULL, imageP, _MAX_PATH));
+		free(imageData);
+		exit(EXIT_FAILURE);
+	}
+
+	// Getting text data
+	// Counting bytes to retrieve
+	printf("Counting bytes, this might take a moment.\n");
+	do
+	{
+		for (char j = 0; j < 8; j++)
+		{
+			storage <<= 1;
+			storage = (char) (storage | (imageData[j + (counter * 8)] & mask));
+		}
+		counter++;
+	} while (storage != EOD);
+	// Allocating memory for encryptedTextData
+	encryptedTextData = malloc(sizeof(char) * (counter));
+	// Checking if memory allocation was successful
+	if (encryptedTextData == NULL)
+	{
+		printf("Failed to allocate memory.\nTerminating program.\n");
+		liLog(3, __FILE__, __LINE__, 1, "Failed to allocate memory.");
+		free(imageData);
+		exit(EXIT_FAILURE);
+	}
+	// Filling memory
+	memset(encryptedTextData, '\0', sizeof(char) * counter);
+	// Retrieving data
+	printf("Retrieving text, this might take a moment.\n");
+	for (int i = 0; i < counter; i++)
+	{
+		printf("\rWorking: %i %%", (int) ceil((i * 100.0) / counter)); // Progress tracking
+		fflush(stdout);
+		storage = '\0';
+		for (char j = 0; j < 8; j++)
+		{
+			storage <<= 1;
+			storage = (char) (storage | (imageData[j + (i * 8)] & mask));
+		}
+		encryptedTextData[i] = storage;
+	}
+	printf("\n");
+	// Freeing memory
+	free(imageData);
+
+	// Checking text
+	printf("%i\n", encryptedTextData[0]);
+	if (encryptedTextData[0] != SOD)
+	{
+		printf("Image: %s\ndoes not have a start tag, can be corrupted or incompatible with program.\nTerminating program.\n", _fullpath(NULL, imageP, _MAX_PATH));
+		liLog(3, __FILE__, __LINE__, 1, "Image: %s does not have a start tag, corrupted or incompatible with program.", _fullpath(NULL, imageP, _MAX_PATH));
+		exit(EXIT_FAILURE);
+	}
+
+	// Preparing output
+	// Allocating memory for textData
+	textData = malloc(sizeof(char) * counter);
+	// Checking if memory allocation was successful
+	if (textData == NULL)
+	{
+		printf("Failed to allocate memory.\nTerminating program.\n");
+		liLog(3, __FILE__, __LINE__, 1, "Failed to allocate memory.");
+		free(encryptedTextData);
+		exit(EXIT_FAILURE);
+	}
+	// Filling memory
+	memset(textData, '\0', sizeof(char) * counter);
+	// Decrypting text
+	caesarCipherF(encryptedTextData, counter, textData, counter, 0, key);
+	// Freeing memory
+	free(encryptedTextData);
+
+	// Generating output
+	// Open output file
+	output = fopen(_fullpath(NULL, outputP, _MAX_PATH), "w");
+	// Checking if output file is opened
+	if (output == NULL)
+	{
+		printf("Failed to open output file: %s.\nTerminating program.\n", _fullpath(NULL, outputP, _MAX_PATH));
+		liLog(3, __FILE__, __LINE__, 1, "Failed to open output file: %s.", _fullpath(NULL, outputP, _MAX_PATH));
+		exit(EXIT_FAILURE);
+	}
+	// Writing text
+	fwrite(textData + 0x1, sizeof(char), (sizeof(char) * counter) - 0x2, output); // Ignoring the tags
+	// Closing output file
+	fclose(output);
+	// Freeing memory
+	free(textData);
+
 	// Return
-	printf("Finished image to text decryption.\nThe output file can be found here: %s\nKey used to decrypt = %i\n", _fullpath(NULL, outputP, _MAX_PATH), key);
+	printf("\nFinished image to text decryption.\nThe output file can be found here: %s\nKey used to decrypt = %i\n", _fullpath(NULL, outputP, _MAX_PATH), key);
 	return 1;
+}
+
+void getImageData(char *imageP, char **headerReturn, char **dataReturn)
+{
+	// File
+	FILE *image = NULL;
+	// Image data
+	char *headerData = NULL;
+	int imageFileSize = 0;
+	int dataOffset = 0;
+	// Return data
+	*headerReturn = NULL;
+	*dataReturn = NULL;
+
+	// Getting data from image
+	// Opening image
+	image = fopen(_fullpath(NULL, imageP, _MAX_PATH), "rb");
+	// Checking if image is opened
+	if (image == NULL)
+	{
+		printf("Failed to open image: %s.\nTerminating program.\n", _fullpath(NULL, imageP, _MAX_PATH));
+		liLog(3, __FILE__, __LINE__, 1, "Failed to open image: %s.", _fullpath(NULL, imageP, _MAX_PATH));
+		exit(EXIT_FAILURE);
+	}
+	// Allocating memory for headerData
+	headerData = malloc(54);
+	// Checking if memory allocation was successful
+	if (headerData == NULL)
+	{
+		printf("Failed to allocate memory.\nTerminating program.\n");
+		liLog(3, __FILE__, __LINE__, 1, "Failed to allocate memory.");
+		fclose(image);
+		exit(EXIT_FAILURE);
+	}
+	// Filling memory
+	memset(headerData, 0, 54);
+	// Reading header data
+	fread(headerData, sizeof(unsigned char), 54, image);
+	// Getting header data
+	imageFileSize = *(int *) &headerData[2];
+	dataOffset = *(int *) &headerData[10];
+	// Freeing memory
+	free(headerData);
+
+	// Getting full header & image data
+	// Allocating memory for headerReturn & dataReturn
+	*headerReturn = malloc(sizeof(char) * (dataOffset));
+	*dataReturn = malloc(sizeof(char) * (imageFileSize - dataOffset));
+	// Checking if memory allocation was successful
+	if ((*dataReturn == NULL) || (*headerReturn == NULL))
+	{
+		printf("Failed to allocate memory.\nTerminating program.\n");
+		liLog(3, __FILE__, __LINE__, 1, "Failed to allocate memory.");
+		fclose(image);
+		exit(EXIT_FAILURE);
+	}
+	// Filling memory
+	memset(*headerReturn, 0, sizeof(char) * (dataOffset));
+	memset(*dataReturn, 0, sizeof(char) * (imageFileSize - dataOffset));
+	// Reading image data
+	fseek(image, 0, SEEK_SET); // Start at the beginning of the file then leave the pointer there
+	fread(*headerReturn, sizeof(unsigned char), dataOffset, image);
+	fread(*dataReturn, sizeof(unsigned char), imageFileSize - dataOffset, image);
+	// Closing image
+	fclose(image);
 }
 
 unsigned int countFileCharacters(char *fileName)
@@ -235,10 +375,18 @@ unsigned int countFileCharacters(char *fileName)
 		return 0;
 	}
 
+	printf("Counting character, this might take a moment.\n");
 	for (charStorage = (char) fgetc(file); charStorage != EOF; charStorage = (char) fgetc(file))
 	{
+		#ifdef EXTLOG // Printing this data slows the program down considerably with large files
+			printf("\rWorking: %i characters", counter); // Progress tracking
+			fflush(stdout);
+		#endif
 		counter++;
 	}
+	#ifdef EXTLOG
+		printf("\n");
+	#endif
 
 	fclose(file);
 
@@ -257,7 +405,8 @@ void printHelp(void)
 	printf("- /d [IMAGE] :: decrypt :: REQUIRES: /o\n");
 	printf("- /t [TEXT FILE] :: text file\n");
 	printf("- /o [OUTPUT FILE] :: output file, either .txt OR .bmp\n");
-	printf("- /k [KEY] :: encryption key, a key between 0 and 124 (incl) for the basic Caesar Cipher,\n\tan offset for the characters in ASCII format. Default value = 0.\n");
+	printf("- /k [KEY] :: encryption key, a key between 0 and 123 (incl) for the basic Caesar Cipher,\n\tan offset for the characters in ASCII format. Default value = 0.\n");
+	printf("- /tracker :: Enable progress tracking. MUST BE THE LAST ARGUMENT!\n\tThis will slow the program down!\n");
 }
 
 char checkFile(char *fileName, char *fileExtension, char terminate, char existing)
@@ -295,7 +444,6 @@ char checkFile(char *fileName, char *fileExtension, char terminate, char existin
 	}
 }
 
-// Encrypts character to NULL, ending the return array early <- should be fixed
 char caesarCipherF(char *input, unsigned int inputLength, char *output, unsigned int outputLength, unsigned char encrypt, unsigned char key)
 {
 	if (inputLength != outputLength) // Checks if both arrays are of the same size
@@ -305,15 +453,11 @@ char caesarCipherF(char *input, unsigned int inputLength, char *output, unsigned
 	}
 
 	printf("%s data, this might take a moment.\n", (encrypt ? "Encrypting" : "Decrypting"));
-	liLog(1, __FILE__, __LINE__, 1, "%s: NULL = LF.", (encrypt ? "Encrypting" : "Decrypting"));
-
-	unsigned char *storage; // Storage for calculations, they go over 127 but are below 255
-	storage = malloc(sizeof(unsigned char) * inputLength); // Reserve memory
-	memset(storage, '\0', sizeof(unsigned char) * inputLength); // Fill storage
+	liLog(1, __FILE__, __LINE__, 1, "%s text.", (encrypt ? "Encrypting" : "Decrypting"));
 
 	for (unsigned int i = 0; i < inputLength; i++) // Encrypts / decrypts the input to the output
 	{
-		if (encrypt && (input[i] == 0)) // The first character of the ASCII table (NULL) is not allowed to be in the input while encrypting, though the input should never have this anyway
+		if (encrypt && (input[i] <= 3)) // The first 4 characters of the ASCII table are not allowed to be in the input while encrypting deu to flags and NULL
 		{
 			printf("Unable to encrypt, input contains an illegal character (%c).\nTerminating program.\n", input[i]);
 			liLog(3, __FILE__, __LINE__, 1, "Input contains an illegal character (%c).", input[i]);
@@ -323,18 +467,22 @@ char caesarCipherF(char *input, unsigned int inputLength, char *output, unsigned
 		printf("\rWorking: %i %%", (int) ceil((i * 100.0) / inputLength)); // Progress tracking
 		fflush(stdout);
 
-		storage[i] = (encrypt ? input[i] : (((input[i] + 125) > 127) ? ((input[i] + 125) % 127) : (input[i] + 125))); // Decompress to 0 - 127 range & copy input to storage
-		storage[i] += (encrypt ? 0 : ((storage[i] <= key) ? 127 : 0)); // Adds 127 if decrypting and the value is <= to key
-		storage[i] += (encrypt ? key : (-key)); // Applies the key
-		storage[i] %= (encrypt ? 127 : 256); // Applies rest division
-		storage[i] = (encrypt ? (((storage[i] + 1) % 127) + 1) : storage[i]); // Compress to 1 - 127 range <- NULL is not allowed as input
-		output[i] = (char) storage[i]; // Converts storage to char and copies it to output
+		if (encrypt)
+		{
+			output[i] = (char) (((input[i] + key) > 127) ? (((input[i] + key) % 128) + 4) : (input[i] + key));
+		}
+		else
+		{
+			output[i] = (char) (((input[i] - key) < 4) ? ((input[i] - key) + 124) : (input[i] - key));
+		}
+
 		// Log encryption / decryption
-		liLog(1, __FILE__, __LINE__, 1, "%s '%c' to '%c': key: %i.", (encrypt ? "Encrypted" : "Decrypted"), ((input[i] == 10) ? 0 : input[i]), ((output[i] == 10) ? 0 : output[i]), key);
+		#ifdef EXTLOG // Logging this data slows the program down considerably with large files
+			liLog(1, __FILE__, __LINE__, 1, "%s '%c' to '%c': key: %i.", (encrypt ? "Encrypted" : "Decrypted"), input[i], output[i], key);
+		#endif
 	}
 
 	printf("\n");
-	free(storage); // Free memory
 
 	return 1;
 }

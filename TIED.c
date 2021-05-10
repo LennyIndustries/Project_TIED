@@ -7,6 +7,9 @@
  * gcc -Wall -pedantic -c myLog.c -o myLog.o
  * gcc -Wall -pedantic TIED.c liLog.o -o TIED.exe
  *
+ * /e TestImage10x10.bmp /o Output.bmp /k 50 /t TestFile_Small.txt
+ * /d Output.bmp /o Output.txt /k 50
+ *
  * http://www.libsdl.org/index.php
  */
 
@@ -31,7 +34,6 @@
 #include <stdint.h>
 
 // Definitions
-//#define DEBUG
 
 // Functions
 /*
@@ -159,9 +161,9 @@ int main(const int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 	// Key range
-	if (key > 124) // 0 - 124 provide encryption, 125 does not, 128+ breaks the encryption function
+	if (key > 123) // 0 - 123 provide encryption (Except 0), 124 does not, 124+ loops back to 0 - 123
 	{
-		printf("Key (%d) out of bounds: 0 - 124 (incl).\nTerminating program.\n", key);
+		printf("Key (%d) out of bounds: 0 - 123 (incl).\nTerminating program.\n", key);
 		liLog(3, __FILE__, __LINE__, 1, "Key (%d) out of bounds.", key);
 		exit(EXIT_FAILURE);
 	}
@@ -181,12 +183,13 @@ int main(const int argc, char *argv[])
 			exit(EXIT_SUCCESS); // Since the user asked for it
 		}
 	} while (input != 'y');
+	printf("\n");
 
 	encrypt ? encryptImage(imageP, textP, outputP, key) : decryptImage(imageP, outputP, key);
 
 	// Exit
 	printf("\nExiting TIED.\nGoodbye %s\n", getenv("USERNAME"));
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 // Reference
