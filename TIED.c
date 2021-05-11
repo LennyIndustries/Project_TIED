@@ -10,6 +10,8 @@
  * /e TestImage10x10.bmp /o Output.bmp /k 50 /t TestFile_Small.txt
  * /d Output.bmp /o Output.txt /k 50
  *
+ * Enable extended logging: -DETXLOG
+ *
  * http://www.libsdl.org/index.php
  */
 
@@ -34,6 +36,7 @@
 #include <stdint.h>
 
 // Definitions
+// DO NOT DEFINE EXTLOG HERE OR ANYWHERE IN HEADERS OR C FILES USED BY THE PROGRAM, USE -DEXTLOG
 
 // Functions
 /*
@@ -48,10 +51,10 @@
 /*
  * Commands: (minimum of 7 arguments is required for either function of the program)
  * - /help :: commands overview
- * - /e [IMAGE] :: encrypt :: REQUIRES: /t, /o, /k
- * - /d [IMAGE] :: decrypt :: REQUIRES: /o, /k
+ * - /e [IMAGE] :: encrypt :: REQUIRES: /t, /o
+ * - /d [IMAGE] :: decrypt :: REQUIRES: /o
  * - /t [TEST FILE] :: text file
- * - /o [OUTPUT FILE} :: output file, either .txt OR .bmp
+ * - /o [OUTPUT FILE] :: output file, either .txt OR .bmp
  * - /k [KEY] :: encryption key, a key between 0 and 127 for the basic Caesar Cipher, a offset for the characters in ASCII format (0 - 127)
  */
 int main(const int argc, char *argv[])
@@ -79,7 +82,7 @@ int main(const int argc, char *argv[])
 	{
 		for (int i = 1; i < argc; i++) // Setting any command to lowercase
 		{
-			if (argv[i][0] == '/') // Checking the first position so it is a command and not a path that contains '/'
+			if ((argv[i][0] == '/') || argv[i][0] == '-') // Checking the first position so it is a command and not a path that contains '/', '-' is also allowed to prefix commands
 			{
 				strToLower(argv[i]);
 			}
@@ -89,13 +92,13 @@ int main(const int argc, char *argv[])
 
 		for (int i = 1; i < argc; i++) // Loading arguments into local variables
 		{
-			if (strcmp(argv[i], "/help") == 0) // strcmp returns 0 if strings match // User want's help, does not matter where it is requested, this exits to program
+			if (strcmp(argv[i] + 1, "help") == 0) // strcmp returns 0 if strings match // User want's help, does not matter where it is requested, this exits to program
 			{
 				liLog(1, __FILE__, __LINE__, 1, "User requested help. Printing & exiting.");
 				printHelp();
 				exit(EXIT_SUCCESS); // Since only help was requested this was successful
 			}
-			else if ((strcmp(argv[i], "/e") == 0) && (encrypt == -1)) // Encrypting, if encrypt is not -1 it is already decrypting
+			else if ((strcmp(argv[i] + 1, "e") == 0) && (encrypt == -1)) // Encrypting, if encrypt is not -1 it is already decrypting
 			{
 				i++;
 				imageP = argv[i];
@@ -103,7 +106,7 @@ int main(const int argc, char *argv[])
 				printf("Encrypting: %s.\n", _fullpath(NULL, imageP, _MAX_PATH));
 				liLog(1, __FILE__, __LINE__, 1, "Encrypting: %s.", _fullpath(NULL, imageP, _MAX_PATH));
 			}
-			else if ((strcmp(argv[i], "/d") == 0) && (encrypt == -1)) // Decrypting, if encrypt is not -1 it is already encrypting
+			else if ((strcmp(argv[i] + 1, "d") == 0) && (encrypt == -1)) // Decrypting, if encrypt is not -1 it is already encrypting
 			{
 				i++;
 				imageP = argv[i];
@@ -111,26 +114,28 @@ int main(const int argc, char *argv[])
 				printf("Decrypting: %s.\n", _fullpath(NULL, imageP, _MAX_PATH));
 				liLog(1, __FILE__, __LINE__, 1, "Decrypting: %s.", _fullpath(NULL, imageP, _MAX_PATH));
 			}
-			else if (strcmp(argv[i], "/t") == 0) // Text file as in or output, depends on encryption setting
+			else if (strcmp(argv[i] + 1, "t") == 0) // Text file as input, only used while encrypting
 			{
 				i++;
 				textP = argv[i];
 				printf("Text file: %s.\n", _fullpath(NULL, textP, _MAX_PATH));
 				liLog(1, __FILE__, __LINE__, 1, "Text file: %s.", _fullpath(NULL, textP, _MAX_PATH));
 			}
-			else if (strcmp(argv[i], "/o") == 0) // Output file, either bmp or txt, depends on encryption setting
+			else if (strcmp(argv[i] + 1, "o") == 0) // Output file, either bmp or txt, depends on encryption setting
 			{
 				i++;
 				outputP = argv[i];
 				printf("Output file: %s.\n", _fullpath(NULL, outputP, _MAX_PATH));
 				liLog(1, __FILE__, __LINE__, 1, "Output file: %s.", _fullpath(NULL, outputP, _MAX_PATH));
 			}
-			else if (strcmp(argv[i], "/k") == 0) // Key for Caesar Cipher (shifting)
+			else if (strcmp(argv[i] + 1, "k") == 0) // Key for Caesar Cipher (shifting), range: 0 - 123, optional argument
 			{
 				i++;
 				key = strtol(argv[i], NULL, 10);
 				// Obviously storing the key as plain text is not a good idea, but it is not a safe/secure encryption anyway, this way you can find the key back if you forget it.
-				liLog(1, __FILE__, __LINE__, 1, "Key: %d.", key);
+				#ifdef EXTLOG // Only log with extended logging defined, gcc: -DEXTLOG
+					liLog(1, __FILE__, __LINE__, 1, "Key: %d.", key);
+				#endif
 			}
 			else // Argument is not known, exiting
 			{
