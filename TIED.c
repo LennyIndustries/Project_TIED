@@ -10,6 +10,9 @@
  * /e TestImage10x10.bmp /o Output.bmp /k 50 /t TestFile_Small.txt
  * /d Output.bmp /o Output.txt /k 50
  *
+ * -e TestImageSquare.bmp -o Output.bmp -t TestFile_ABC.txt -k 120
+ * -d Output.bmp -o Output.txt -k 120
+ *
  * Enable extended logging: -DETXLOG
  *
  * http://www.libsdl.org/index.php
@@ -49,7 +52,7 @@
 
 // Main
 /*
- * Commands: (minimum of 7 arguments is required for either function of the program)
+ * Commands: (minimum of 5 arguments is required for either function of the program)
  * - /help :: commands overview
  * - /e [IMAGE] :: encrypt :: REQUIRES: /t, /o
  * - /d [IMAGE] :: decrypt :: REQUIRES: /o
@@ -88,7 +91,7 @@ int main(const int argc, char *argv[])
 			}
 		}
 
-		printf("Commands.\n");
+		printf("Commands:\n");
 
 		for (int i = 1; i < argc; i++) // Loading arguments into local variables
 		{
@@ -159,14 +162,14 @@ int main(const int argc, char *argv[])
 	// File extension & existence
 	checkFile(imageP, "bmp", 1, 1); // If wrong program is terminated, must exist
 	encrypt ? checkFile(textP, "txt", 1, 1) : 0;
-	if (!(encrypt ? checkFile(outputP, "bmp", 0, 0) : checkFile(outputP, "txt", 0, 0))) // Does not need to exist
+	if (!(encrypt ? checkFile(outputP, "bmp", 0, 0) : checkFile(outputP, "txt", 0, 0))) // Does not need to exist, does not terminate in checkFile
 	{
 		printf("File: %s,\ndoes not have the correct extension.\nTerminating program.\n", _fullpath(NULL, outputP, _MAX_PATH));
 		liLog(3, __FILE__, __LINE__, 1, "Output file is not correct.");
 		exit(EXIT_FAILURE);
 	}
 	// Key range
-	if (key > 123) // 0 - 123 provide encryption (Except 0), 124 does not, 124+ loops back to 0 - 123
+	if (key > 123) // 0 - 123 provide encryption (Except 0), 124 does not, 124+ loops back to 0 - 123, if key + character go over 255 it breaks the function
 	{
 		printf("Key (%d) out of bounds: 0 - 123 (incl).\nTerminating program.\n", key);
 		liLog(3, __FILE__, __LINE__, 1, "Key (%d) out of bounds.", key);
@@ -190,7 +193,7 @@ int main(const int argc, char *argv[])
 	} while (input != 'y');
 	printf("\n");
 
-	encrypt ? encryptImage(imageP, textP, outputP, key) : decryptImage(imageP, outputP, key);
+	printf("\n%s %s.\n", (encrypt ? "Encryption" : "Decryption"), ((encrypt ? encryptImage(imageP, textP, outputP, key) : decryptImage(imageP, outputP, key)) ? "failed" : "successful"));
 
 	// Exit
 	printf("\nExiting TIED.\nGoodbye %s\n", getenv("USERNAME"));

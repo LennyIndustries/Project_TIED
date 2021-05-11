@@ -44,7 +44,7 @@ char decryptImage(char *image, char *output, unsigned char key);
 /*
  * TBD
  */
-void getImageData(char *imageP, char **headerReturn, char **dataReturn);
+char getImageData(char *imageP, char **headerReturn, char **dataReturn);
 
 /*
  * Counts the character in a file.
