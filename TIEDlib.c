@@ -31,13 +31,13 @@ char encryptImage(char *imageP, char *textP, char *outputP, unsigned char key)
 
 	// Getting data
 	// Getting data from image
-	if ((getImageData(imageP, &headerData, &imageData)))
+	if (!(getImageData(imageP, &headerData, &imageData)))
 	{
 		printf("Failed to get image data from: %s.\nTerminating program.\n", _fullpath(NULL, imageP, _MAX_PATH));
 		liLog(3, __FILE__, __LINE__, 1, "Failed to get image data from: %s.", _fullpath(NULL, imageP, _MAX_PATH));
 		free(headerData);
 		free(imageData);
-		return EXIT_FAILURE;
+		return 0;
 	}
 	// Getting header data
 	imageFileSize = *(int *) &headerData[2];
@@ -59,7 +59,7 @@ char encryptImage(char *imageP, char *textP, char *outputP, unsigned char key)
 		liLog(3, __FILE__, __LINE__, 1, "Image does not have enough color depth: %i.", bitsPerPixel);
 		free(headerData);
 		free(imageData);
-		return EXIT_FAILURE;
+		return 0;
 	}
 	if (fileCharacters > imageBytes)
 	{
@@ -67,7 +67,7 @@ char encryptImage(char *imageP, char *textP, char *outputP, unsigned char key)
 		liLog(3, __FILE__, __LINE__, 1, "Image to small: %i :: %i.", fileCharacters, imageBytes);
 		free(headerData);
 		free(imageData);
-		return EXIT_FAILURE;
+		return 0;
 	}
 	if (reserved == ENCRYPTED)
 	{
@@ -75,7 +75,7 @@ char encryptImage(char *imageP, char *textP, char *outputP, unsigned char key)
 		liLog(3, __FILE__, __LINE__, 1, "Image: %s already encrypted or incompatible with program.", _fullpath(NULL, imageP, _MAX_PATH));
 		free(headerData);
 		free(imageData);
-		return EXIT_FAILURE;
+		return 0;
 	}
 
 	// Getting text data
@@ -88,7 +88,7 @@ char encryptImage(char *imageP, char *textP, char *outputP, unsigned char key)
 		liLog(3, __FILE__, __LINE__, 1, "Failed to open text file: %s.", _fullpath(NULL, textP, _MAX_PATH));
 		free(headerData);
 		free(imageData);
-		return EXIT_FAILURE;
+		return 0;
 	}
 	// Allocating memory for textData
 	textData = malloc(sizeof(char) * (fileCharacters + 0x2)); // 0x2 Contains start of and end of text tags
@@ -100,7 +100,7 @@ char encryptImage(char *imageP, char *textP, char *outputP, unsigned char key)
 		free(headerData);
 		free(imageData);
 		fclose(text);
-		return EXIT_FAILURE;
+		return 0;
 	}
 	// Filling memory
 	memset(textData, '0', sizeof(char) * (fileCharacters + 0x2));
@@ -121,7 +121,7 @@ char encryptImage(char *imageP, char *textP, char *outputP, unsigned char key)
 		free(imageData);
 		free(textData);
 		fclose(text);
-		return EXIT_FAILURE;
+		return 0;
 	}
 	// Filling memory
 	memset(encryptedTextData, '0', sizeof(char) * (fileCharacters + 0x2));
@@ -162,7 +162,7 @@ char encryptImage(char *imageP, char *textP, char *outputP, unsigned char key)
 		liLog(3, __FILE__, __LINE__, 1, "Failed to open output file: %s.", _fullpath(NULL, outputP, _MAX_PATH));
 		free(headerData);
 		free(imageData);
-		return EXIT_FAILURE;
+		return 0;
 	}
 	// Writing header
 	fwrite(headerData, sizeof(char), (sizeof(char) * (dataOffset)), output);
@@ -176,7 +176,7 @@ char encryptImage(char *imageP, char *textP, char *outputP, unsigned char key)
 
 	// Return
 	printf("\nFinished text to image encryption.\nThe output file can be found here: %s\nKey used to encrypt = %i\n", _fullpath(NULL, outputP, _MAX_PATH), key);
-	return EXIT_SUCCESS;
+	return 1;
 }
 
 char decryptImage(char *imageP, char *outputP, unsigned char key)
@@ -197,13 +197,13 @@ char decryptImage(char *imageP, char *outputP, unsigned char key)
 
 	// Getting data
 	// Getting data from image
-	if ((getImageData(imageP, &headerData, &imageData)))
+	if (!(getImageData(imageP, &headerData, &imageData)))
 	{
 		printf("Failed to get image data from: %s.\nTerminating program.\n", _fullpath(NULL, imageP, _MAX_PATH));
 		liLog(3, __FILE__, __LINE__, 1, "Failed to get image data from: %s.", _fullpath(NULL, imageP, _MAX_PATH));
 		free(headerData);
 		free(imageData);
-		return EXIT_FAILURE;
+		return 0;
 	}
 	// Getting data from header
 	reserved = *(int *) &headerData[6];
@@ -216,7 +216,7 @@ char decryptImage(char *imageP, char *outputP, unsigned char key)
 		printf("Image: %s\nis not encrypted or incompatible with program.\nTerminating program.\n", _fullpath(NULL, imageP, _MAX_PATH));
 		liLog(3, __FILE__, __LINE__, 1, "Image: %s is not encrypted or incompatible with program.", _fullpath(NULL, imageP, _MAX_PATH));
 		free(imageData);
-		return EXIT_FAILURE;
+		return 0;
 	}
 
 	// Getting text data
@@ -246,7 +246,7 @@ char decryptImage(char *imageP, char *outputP, unsigned char key)
 		printf("Failed to allocate memory.\nTerminating program.\n");
 		liLog(3, __FILE__, __LINE__, 1, "Failed to allocate memory.");
 		free(imageData);
-		return EXIT_FAILURE;
+		return 0;
 	}
 	// Filling memory
 	memset(encryptedTextData, '\0', sizeof(char) * counter);
@@ -273,7 +273,7 @@ char decryptImage(char *imageP, char *outputP, unsigned char key)
 	{
 		printf("Image: %s\ndoes not have a start tag, can be corrupted or incompatible with program.\nTerminating program.\n", _fullpath(NULL, imageP, _MAX_PATH));
 		liLog(3, __FILE__, __LINE__, 1, "Image: %s does not have a start tag, corrupted or incompatible with program.", _fullpath(NULL, imageP, _MAX_PATH));
-		return EXIT_FAILURE;
+		return 0;
 	}
 
 	// Preparing output
@@ -285,7 +285,7 @@ char decryptImage(char *imageP, char *outputP, unsigned char key)
 		printf("Failed to allocate memory.\nTerminating program.\n");
 		liLog(3, __FILE__, __LINE__, 1, "Failed to allocate memory.");
 		free(encryptedTextData);
-		return EXIT_FAILURE;
+		return 0;
 	}
 	// Filling memory
 	memset(textData, '\0', sizeof(char) * counter);
@@ -302,7 +302,7 @@ char decryptImage(char *imageP, char *outputP, unsigned char key)
 	{
 		printf("Failed to open output file: %s.\nTerminating program.\n", _fullpath(NULL, outputP, _MAX_PATH));
 		liLog(3, __FILE__, __LINE__, 1, "Failed to open output file: %s.", _fullpath(NULL, outputP, _MAX_PATH));
-		return EXIT_FAILURE;
+		return 0;
 	}
 	// Writing text
 	fwrite(textData + 0x1, sizeof(char), (sizeof(char) * counter) - 0x2, output); // Ignoring the tags
@@ -313,7 +313,7 @@ char decryptImage(char *imageP, char *outputP, unsigned char key)
 
 	// Return
 	printf("\nFinished image to text decryption.\nThe output file can be found here: %s\nKey used to decrypt = %i\n", _fullpath(NULL, outputP, _MAX_PATH), key);
-	return EXIT_SUCCESS;
+	return 1;
 }
 
 char getImageData(char *imageP, char **headerReturn, char **dataReturn)
@@ -336,7 +336,7 @@ char getImageData(char *imageP, char **headerReturn, char **dataReturn)
 	{
 		printf("Failed to open image: %s.\nTerminating program.\n", _fullpath(NULL, imageP, _MAX_PATH));
 		liLog(3, __FILE__, __LINE__, 1, "Failed to open image: %s.", _fullpath(NULL, imageP, _MAX_PATH));
-		return EXIT_FAILURE;
+		return 0;
 	}
 	// Allocating memory for headerData
 	headerData = malloc(54);
@@ -346,7 +346,7 @@ char getImageData(char *imageP, char **headerReturn, char **dataReturn)
 		printf("Failed to allocate memory.\nTerminating program.\n");
 		liLog(3, __FILE__, __LINE__, 1, "Failed to allocate memory.");
 		fclose(image);
-		return EXIT_FAILURE;
+		return 0;
 	}
 	// Filling memory
 	memset(headerData, 0, 54);
@@ -368,7 +368,7 @@ char getImageData(char *imageP, char **headerReturn, char **dataReturn)
 		printf("Failed to allocate memory.\nTerminating program.\n");
 		liLog(3, __FILE__, __LINE__, 1, "Failed to allocate memory.");
 		fclose(image);
-		return EXIT_FAILURE;
+		return 0;
 	}
 	// Filling memory
 	memset(*headerReturn, 0, sizeof(char) * (dataOffset));
@@ -380,7 +380,7 @@ char getImageData(char *imageP, char **headerReturn, char **dataReturn)
 	// Closing image
 	fclose(image);
 
-	return EXIT_SUCCESS;
+	return 1;
 }
 
 unsigned int countFileCharacters(char *fileName)

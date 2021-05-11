@@ -193,7 +193,7 @@ int main(const int argc, char *argv[])
 	} while (input != 'y');
 	printf("\n");
 
-	printf("\n%s %s.\n", (encrypt ? "Encryption" : "Decryption"), ((encrypt ? encryptImage(imageP, textP, outputP, key) : decryptImage(imageP, outputP, key)) ? "failed" : "successful"));
+	printf("\n%s %s.\n", (encrypt ? "Encryption" : "Decryption"), ((encrypt ? encryptImage(imageP, textP, outputP, key) : decryptImage(imageP, outputP, key)) ? "successful" : "failed"));
 
 	// Exit
 	printf("\nExiting TIED.\nGoodbye %s\n", getenv("USERNAME"));
