@@ -32,17 +32,23 @@
 
 // Functions
 /*
- * TBD
+ * Encrypts an image.
+ * @param: char * (imageP) the image to decrypt, char * (textP) where the text file is, char * (output) where the output files need to be, unsigned char (key) the key to decrypt the image
+ * @return: char 0 if failed, 1 if successful
  */
 char encryptImage(char *imageP, char *textP, char *outputP, unsigned char key);
 
 /*
- * TBD
+ * Decrypts an image.
+ * @param: char * (imageP) the image to decrypt, char * (outputP) where the output files need to be, unsigned char (key) the key to decrypt the image
+ * @return: char 0 if failed, 1 if successful
  */
-char decryptImage(char *image, char *output, unsigned char key);
+char decryptImage(char *imageP, char *outputP, unsigned char key);
 
 /*
- * TBD
+ * Gets data from the image, assigns memory, be sure to free it! Returns 0 if failed.
+ * @param: char * (imageP) pointer to image, char ** (headerReturn) header data to return, memory gets assigned, char ** (dataReturn) image data to return, memory gets assigned
+ * @return: char 0 if failed, 1 if successful
  */
 char getImageData(char *imageP, char **headerReturn, char **dataReturn);
 
