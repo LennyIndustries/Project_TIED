@@ -51,7 +51,7 @@
  * - /d [IMAGE] :: decrypt :: REQUIRES: /o
  * - /t [TEST FILE] :: text file
  * - /o [OUTPUT FILE] :: output file, either .txt OR .bmp
- * - /k [KEY] :: encryption key, a key between 0 and 127 for the basic Caesar Cipher, a offset for the characters in ASCII format (0 - 127)
+ * - /k [KEY] :: encryption key, a key between 0 and 123 for the basic Caesar Cipher, an offset for the characters in ASCII format (0 - 123)
  */
 int main(const int argc, char *argv[])
 {
@@ -78,7 +78,7 @@ int main(const int argc, char *argv[])
 	{
 		for (int i = 1; i < argc; i++) // Setting any command to lowercase
 		{
-			if ((argv[i][0] == '/') || argv[i][0] == '-') // Checking the first position so it is a command and not a path that contains '/', '-' is also allowed to prefix commands
+			if ((argv[i][0] == '/') || (argv[i][0] == '-')) // Checking the first position so it is a command and not a path that contains '/', '-' is also allowed to prefix commands
 			{
 				strToLower(argv[i]);
 			}
@@ -88,13 +88,13 @@ int main(const int argc, char *argv[])
 
 		for (int i = 1; i < argc; i++) // Loading arguments into local variables
 		{
-			if (strcmp(argv[i] + 1, "help") == 0) // strcmp returns 0 if strings match // User want's help, does not matter where it is requested, this exits to program
+			if ((strcmp(argv[i] + 1, "help") == 0) && ((argv[i][0] == '/') || (argv[i][0] == '-'))) // strcmp returns 0 if strings match // User want's help, does not matter where it is requested, this exits to program
 			{
 				liLog(1, __FILE__, __LINE__, 1, "User requested help. Printing & exiting.");
 				printHelp();
 				exit(EXIT_SUCCESS); // Since only help was requested this was successful
 			}
-			else if ((strcmp(argv[i] + 1, "e") == 0) && (encrypt == -1)) // Encrypting, if encrypt is not -1 it is already decrypting
+			else if (((strcmp(argv[i] + 1, "e") == 0) && (encrypt == -1)) && ((argv[i][0] == '/') || (argv[i][0] == '-'))) // Encrypting, if encrypt is not -1 it is already decrypting
 			{
 				i++;
 				imageP = argv[i];
@@ -102,7 +102,7 @@ int main(const int argc, char *argv[])
 				printf("Encrypting: %s.\n", _fullpath(NULL, imageP, _MAX_PATH));
 				liLog(1, __FILE__, __LINE__, 1, "Encrypting: %s.", _fullpath(NULL, imageP, _MAX_PATH));
 			}
-			else if ((strcmp(argv[i] + 1, "d") == 0) && (encrypt == -1)) // Decrypting, if encrypt is not -1 it is already encrypting
+			else if (((strcmp(argv[i] + 1, "d") == 0) && (encrypt == -1)) && ((argv[i][0] == '/') || (argv[i][0] == '-'))) // Decrypting, if encrypt is not -1 it is already encrypting
 			{
 				i++;
 				imageP = argv[i];
@@ -110,21 +110,21 @@ int main(const int argc, char *argv[])
 				printf("Decrypting: %s.\n", _fullpath(NULL, imageP, _MAX_PATH));
 				liLog(1, __FILE__, __LINE__, 1, "Decrypting: %s.", _fullpath(NULL, imageP, _MAX_PATH));
 			}
-			else if (strcmp(argv[i] + 1, "t") == 0) // Text file as input, only used while encrypting
+			else if ((strcmp(argv[i] + 1, "t") == 0) && ((argv[i][0] == '/') || (argv[i][0] == '-'))) // Text file as input, only used while encrypting
 			{
 				i++;
 				textP = argv[i];
 				printf("Text file: %s.\n", _fullpath(NULL, textP, _MAX_PATH));
 				liLog(1, __FILE__, __LINE__, 1, "Text file: %s.", _fullpath(NULL, textP, _MAX_PATH));
 			}
-			else if (strcmp(argv[i] + 1, "o") == 0) // Output file, either bmp or txt, depends on encryption setting
+			else if ((strcmp(argv[i] + 1, "o") == 0) && ((argv[i][0] == '/') || (argv[i][0] == '-'))) // Output file, either bmp or txt, depends on encryption setting
 			{
 				i++;
 				outputP = argv[i];
 				printf("Output file: %s.\n", _fullpath(NULL, outputP, _MAX_PATH));
 				liLog(1, __FILE__, __LINE__, 1, "Output file: %s.", _fullpath(NULL, outputP, _MAX_PATH));
 			}
-			else if (strcmp(argv[i] + 1, "k") == 0) // Key for Caesar Cipher (shifting), range: 0 - 123, optional argument
+			else if ((strcmp(argv[i] + 1, "k") == 0) && ((argv[i][0] == '/') || (argv[i][0] == '-'))) // Key for Caesar Cipher (shifting), range: 0 - 123, optional argument
 			{
 				i++;
 				key = strtol(argv[i], NULL, 10);
@@ -135,7 +135,7 @@ int main(const int argc, char *argv[])
 			}
 			else // Argument is not known, exiting
 			{
-				printf("Unknown argument: %s.\nRun /help for more info.\nTerminating program.\n", argv[i]);
+				printf("\nUnknown argument: %s.\nRun /help for more info.\nTerminating program.\n", argv[i]);
 				printHelp();
 				liLog(3, __FILE__, __LINE__, 1, "Unknown argument: %s.", argv[i]);
 				exit(EXIT_FAILURE);
