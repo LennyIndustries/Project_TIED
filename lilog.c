@@ -6,13 +6,7 @@
 // Libraries
 #include "lilog.h"
 
-//struct
-//{
-//	unsigned char logLevel: 2;
-//	unsigned char append: 1;
-//} myLogData;
-
-void liLog(char logLevel, char *file, unsigned int line, char append, const char *message, ...) // Add bitfield support
+void liLog(char logLevel, char *file, unsigned int line, char append, const char *message, ...)
 {
 	// A big ball of wibbly wobbly, timey wimey stuff.
 	char dateTime[22] = {'\0'};

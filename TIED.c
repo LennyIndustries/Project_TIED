@@ -4,8 +4,10 @@
  *
  * MFR = Mark For Removal (AKA DEBUG), must be removed out of release version.
  *
- * gcc -Wall -pedantic -c myLog.c -o myLog.o
- * gcc -Wall -pedantic TIED.c liLog.o -o TIED.exe
+ * gcc -Wall -pedantic -c lilog.c -o lilog.o
+ * gcc -Wall -pedantic -c lilib.c -o lilib.o
+ * gcc -Wall -pedantic -c TIEDlib.c -o TIEDlib.o
+ * gcc -Wall -pedantic TIED.c liLog.o lilib.o TIEDlib.o -o TIED.exe
  *
  * /e TestImage10x10.bmp /o Output.bmp /k 50 /t TestFile_Small.txt
  * /d Output.bmp /o Output.txt /k 50
@@ -34,21 +36,12 @@
 #include "TIEDlib.h"
 
 // Standard
-//#include <limits.h>
-//#include <unistd.h>
 #include <stdint.h>
 
 // Definitions
 // DO NOT DEFINE EXTLOG HERE OR ANYWHERE IN HEADERS OR C FILES USED BY THE PROGRAM, USE -DEXTLOG
 
 // Functions
-/*
- * Reads hex from the header of a BMP file and converts it to decimal. Can handle up to 4 bytes and does not rely on type.
- * @param: const char * (header) the header array, unsigned char (startPos) the starting point in the array, unsigned char (bytesToRead) the amount of bytes to read out of the header
- * @return: int (decimal) the decimal number read out of the BMP
- */
-// Reference
-//int decimalFromHeader(const char *header, unsigned int startPos, unsigned char bytesToRead); // MFR
 
 // Main
 /*
@@ -199,27 +192,3 @@ int main(const int argc, char *argv[])
 	printf("\nExiting TIED.\nGoodbye %s\n", getenv("USERNAME"));
 	return EXIT_SUCCESS;
 }
-
-// Reference
-//int decimalFromHeader(const char *header, unsigned int startPos, unsigned char bytesToRead) // This works but is overcomplicated and uses large data types // MFR
-//{
-//	int decimal = 0;
-//	// https://docs.oracle.com/cd/E19455-01/806-0477/chapter3-10/index.html // uintptr_t
-//	unsigned long long base = 1; // Needs long long because base can go to 68719476736 if 4 bytes are being read, long gives only 4 bytes on 32 bit OS
-//	unsigned char nybbleStorage = '\0';
-//	unsigned char nybbleMask = B(00001111);
-//
-//	for (unsigned int i = startPos; i < (startPos + bytesToRead); i++)
-//	{
-//		for (char j = 0; j < 2; j++)
-//		{
-//			nybbleStorage = (unsigned char) (header[i] & (nybbleMask << (j * 4))) >> (j * 4);
-//			decimal += (int) ((unsigned long long) nybbleStorage * base);
-//			liLog(1, __FILE__, __LINE__, 1, "nybbleStorage: %hu\tShift 1: %i\tShift 2: %i\tDecimal: %i\tBase: %llu", nybbleStorage, (j * 4), (4 - (j * 4)), decimal, base);
-//			base *= 16;
-//		}
-//	}
-//
-//	liLog(1, __FILE__, __LINE__, 1, "Returning from decimalFromHeader: %i", decimal);
-//	return decimal;
-//}

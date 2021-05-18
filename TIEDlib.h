@@ -46,7 +46,7 @@ char encryptImage(char *imageP, char *textP, char *outputP, unsigned char key);
 char decryptImage(char *imageP, char *outputP, unsigned char key);
 
 /*
- * Gets data from the image, assigns memory, be sure to free it! Returns 0 if failed.
+ * Gets data from the image, assigns memory, make sure to free it! Returns 0 if failed.
  * @param: char * (imageP) pointer to image, char ** (headerReturn) header data to return, memory gets assigned, char ** (dataReturn) image data to return, memory gets assigned
  * @return: char 0 if failed, 1 if successful
  */
@@ -75,10 +75,10 @@ char checkFile(char *fileName, char *fileExtension, char terminate, char existin
 
 /*
  * Applies a caesar cipher to the input and send it to the output.
- * 0 - 124 provide encryption, 125 does not, 128+ breaks the encryption function.
+ * 0 - 123 provide encryption (Except 0), 124 does not, 124+ loops back to 0 - 123, if key + character go over 255 it breaks the function.
  * @param: char * (input) input text, unsigned int (inputLength) length of the input text, char * (output) output text, unsigned int (outputLength) length of the output text, unsigned char (encrypt) 0 decrypt 1 encrypt, unsigned char (key) encryption key
  * @return: char 0 if input and output are not of the same size, 1 if it has finished
  */
 char caesarCipherF(char *input, unsigned int inputLength, char *output, unsigned int outputLength, unsigned char encrypt, unsigned char key);
 
-#endif //PROJECT_TIED_TIEDLIB_H
+#endif // PROJECT_TIED_TIEDLIB_H

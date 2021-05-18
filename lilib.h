@@ -51,4 +51,4 @@ int indexOf(const char *str, char character);
  */
 void subString(char *str_source, char *str_destination, int startPos, int length);
 
-#endif //PROJECT_TIED_LILIB_H
+#endif // PROJECT_TIED_LILIB_H

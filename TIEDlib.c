@@ -51,7 +51,7 @@ char encryptImage(char *imageP, char *textP, char *outputP, unsigned char key)
 	// Getting total character in text file
 	fileCharacters = countFileCharacters(textP);
 	// Calculating image bytes
-	imageBytes = ((with * height * bitsPerPixel) / 8) / 8;
+	imageBytes = ((with * height * bitsPerPixel) / 8) / 8; // with * height = TOTAL PIXELS; * bitsPerPixel = TOTAL BITS; / 8 = TOTAL BYTES; / 8 = MAX CHARS IN IMAGE (8 bytes per char)
 	// Checking sizes
 	if (bitsPerPixel < 8)
 	{
@@ -187,11 +187,15 @@ char decryptImage(char *imageP, char *outputP, unsigned char key)
 	char *headerData = NULL;
 	char *imageData = NULL;
 	int reserved = 0;
+	int with = 0;
+	int height = 0;
+	short bitsPerPixel = 0;
+	unsigned int imageBytes = 0;
 	// Text data
 	char *textData = NULL;
 	char *encryptedTextData = NULL;
 	// Text retrieving
-	int counter = 0;
+	unsigned int counter = 0;
 	char storage = '\0';
 	unsigned char mask = 0x01;
 
@@ -207,6 +211,11 @@ char decryptImage(char *imageP, char *outputP, unsigned char key)
 	}
 	// Getting data from header
 	reserved = *(int *) &headerData[6];
+	with = *(int *) &headerData[18];
+	height = *(int *) &headerData[22];
+	bitsPerPixel = *(short *) &headerData[28];
+	// Calculating total bytes
+	imageBytes = (with * height * bitsPerPixel) / 8; // with * height = TOTAL PIXELS; * bitsPerPixel = TOTAL BITS; / 8 = TOTAL BYTES
 	// Freeing memory
 	free(headerData);
 
@@ -234,10 +243,17 @@ char decryptImage(char *imageP, char *outputP, unsigned char key)
 			storage = (char) (storage | (imageData[j + (counter * 8)] & mask));
 		}
 		counter++;
-	} while (storage != EOD);
+	} while ((storage != EOD) && (counter <= imageBytes));
 	#ifdef EXTLOG
 		printf("\n");
 	#endif
+	// Checking that we found EOD
+	if ((storage != EOD) || (counter > imageBytes))
+	{
+		printf("Could not find end tag.\nTerminating program.\n");
+		liLog(3, __FILE__, __LINE__, 1, "Failed to find end tag.");
+		return 0;
+	}
 	// Allocating memory for encryptedTextData
 	encryptedTextData = malloc(sizeof(char) * (counter));
 	// Checking if memory allocation was successful
@@ -252,7 +268,7 @@ char decryptImage(char *imageP, char *outputP, unsigned char key)
 	memset(encryptedTextData, '\0', sizeof(char) * counter);
 	// Retrieving data
 	printf("Retrieving text, this might take a moment.\n");
-	for (int i = 0; i < counter; i++)
+	for (unsigned int i = 0; i < counter; i++)
 	{
 		printf("\rWorking: %i %%", (int) ceil((i * 100.0) / counter)); // Progress tracking
 		fflush(stdout);
