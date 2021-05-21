@@ -88,56 +88,76 @@ int main(const int argc, char *argv[])
 
 		for (int i = 1; i < argc; i++) // Loading arguments into local variables
 		{
-			if ((strcmp(argv[i] + 2, "help") == 0) && (((argv[i][0] == '/') && (argv[i][1] == '/')) || ((argv[i][0] == '-') && (argv[i][1] == '-')))) // strcmp returns 0 if strings match // User want's help, does not matter where it is requested, this exits to program
+			if (((argv[i][0] == '/') && (argv[i][1] == '/')) || ((argv[i][0] == '-') && (argv[i][1] == '-')))
 			{
-				liLog(1, __FILE__, __LINE__, 1, "User requested help. Printing & exiting.");
-				printHelp();
-				exit(EXIT_SUCCESS); // Since help was requested this was successful
+				if (strcmp(argv[i] + 2, "help") == 0) // strcmp returns 0 if strings match // User want's help, does not matter where it is requested, this exits to program
+				{
+					liLog(1, __FILE__, __LINE__, 1, "User requested help. Printing & exiting.");
+					printHelp();
+					exit(EXIT_SUCCESS); // Since help was requested this was successful
+				}
+				else // Argument is not known, exiting
+				{
+					printf("\nUnknown argument: %s.\nRun '//' or '--' help for more info.\nTerminating program.\n", argv[i]);
+					printHelp();
+					liLog(3, __FILE__, __LINE__, 1, "Unknown argument: %s.", argv[i]);
+					exit(EXIT_FAILURE);
+				}
 			}
-			else if ((strcmp(argv[i] + 1, "contact") == 0) && ((argv[i][0] == '/') || (argv[i][0] == '-'))) // Text file as input, only used while encrypting
+			else if ((argv[i][0] == '/') || (argv[i][0] == '-'))
 			{
-				liLog(1, __FILE__, __LINE__, 1, "User requested contact. Opening site & exiting.");
-				system("explorer https://github.com/LennyIndustries/Project_TIED/discussions/3");
-				exit(EXIT_SUCCESS); // Since contact was requested this was successful
-			}
-			else if (((strcmp(argv[i] + 1, "e") == 0) && (encrypt == -1)) && ((argv[i][0] == '/') || (argv[i][0] == '-'))) // Encrypting, if encrypt is not -1 it is already decrypting
-			{
-				i++;
-				imageP = argv[i];
-				encrypt = 1;
-				printf("Encrypting: %s.\n", _fullpath(NULL, imageP, _MAX_PATH));
-				liLog(1, __FILE__, __LINE__, 1, "Encrypting: %s.", _fullpath(NULL, imageP, _MAX_PATH));
-			}
-			else if (((strcmp(argv[i] + 1, "d") == 0) && (encrypt == -1)) && ((argv[i][0] == '/') || (argv[i][0] == '-'))) // Decrypting, if encrypt is not -1 it is already encrypting
-			{
-				i++;
-				imageP = argv[i];
-				encrypt = 0;
-				printf("Decrypting: %s.\n", _fullpath(NULL, imageP, _MAX_PATH));
-				liLog(1, __FILE__, __LINE__, 1, "Decrypting: %s.", _fullpath(NULL, imageP, _MAX_PATH));
-			}
-			else if ((strcmp(argv[i] + 1, "t") == 0) && ((argv[i][0] == '/') || (argv[i][0] == '-'))) // Text file as input, only used while encrypting
-			{
-				i++;
-				textP = argv[i];
-				printf("Text file: %s.\n", _fullpath(NULL, textP, _MAX_PATH));
-				liLog(1, __FILE__, __LINE__, 1, "Text file: %s.", _fullpath(NULL, textP, _MAX_PATH));
-			}
-			else if ((strcmp(argv[i] + 1, "o") == 0) && ((argv[i][0] == '/') || (argv[i][0] == '-'))) // Output file, either bmp or txt, depends on encryption setting
-			{
-				i++;
-				outputP = argv[i];
-				printf("Output file: %s.\n", _fullpath(NULL, outputP, _MAX_PATH));
-				liLog(1, __FILE__, __LINE__, 1, "Output file: %s.", _fullpath(NULL, outputP, _MAX_PATH));
-			}
-			else if ((strcmp(argv[i] + 1, "k") == 0) && ((argv[i][0] == '/') || (argv[i][0] == '-'))) // Key for Caesar Cipher (shifting), range: 0 - 123, optional argument
-			{
-				i++;
-				key = strtol(argv[i], NULL, 10);
-				// Obviously storing the key as plain text is not a good idea, but it is not a safe/secure encryption anyway, this way you can find the key back if you forget it.
-				#ifdef EXTLOG // Only log with extended logging defined, gcc: -DEXTLOG
+				if (strcmp(argv[i] + 1, "contact") == 0) // Opens a link to Github discussions
+				{
+					liLog(1, __FILE__, __LINE__, 1, "User requested contact. Opening site & exiting.");
+					system("explorer https://github.com/LennyIndustries/Project_TIED/discussions/3");
+					exit(EXIT_SUCCESS); // Since contact was requested this was successful
+				}
+				else if (strcmp(argv[i] + 1, "e") == 0) // Encrypting, if encrypt is not -1 it is already decrypting
+				{
+					i++;
+					imageP = argv[i];
+					encrypt = 1;
+					printf("Encrypting: %s.\n", _fullpath(NULL, imageP, _MAX_PATH));
+					liLog(1, __FILE__, __LINE__, 1, "Encrypting: %s.", _fullpath(NULL, imageP, _MAX_PATH));
+				}
+				else if (strcmp(argv[i] + 1, "d") == 0) // Decrypting, if encrypt is not -1 it is already encrypting
+				{
+					i++;
+					imageP = argv[i];
+					encrypt = 0;
+					printf("Decrypting: %s.\n", _fullpath(NULL, imageP, _MAX_PATH));
+					liLog(1, __FILE__, __LINE__, 1, "Decrypting: %s.", _fullpath(NULL, imageP, _MAX_PATH));
+				}
+				else if (strcmp(argv[i] + 1, "t") == 0) // Text file as input, only used while encrypting
+				{
+					i++;
+					textP = argv[i];
+					printf("Text file: %s.\n", _fullpath(NULL, textP, _MAX_PATH));
+					liLog(1, __FILE__, __LINE__, 1, "Text file: %s.", _fullpath(NULL, textP, _MAX_PATH));
+				}
+				else if (strcmp(argv[i] + 1, "o") == 0) // Output file, either bmp or txt, depends on encryption setting
+				{
+					i++;
+					outputP = argv[i];
+					printf("Output file: %s.\n", _fullpath(NULL, outputP, _MAX_PATH));
+					liLog(1, __FILE__, __LINE__, 1, "Output file: %s.", _fullpath(NULL, outputP, _MAX_PATH));
+				}
+				else if (strcmp(argv[i] + 1, "k") == 0) // Key for Caesar Cipher (shifting), range: 0 - 123, optional argument
+				{
+					i++;
+					key = strtol(argv[i], NULL, 10);
+					// Obviously storing the key as plain text is not a good idea, but it is not a safe/secure encryption anyway, this way you can find the key back if you forget it.
+					#ifdef EXTLOG // Only log with extended logging defined, gcc: -DEXTLOG
 					liLog(1, __FILE__, __LINE__, 1, "Key: %d.", key);
-				#endif
+					#endif
+				}
+				else // Argument is not known, exiting
+				{
+					printf("\nUnknown argument: %s.\nRun '//' or '--' help for more info.\nTerminating program.\n", argv[i]);
+					printHelp();
+					liLog(3, __FILE__, __LINE__, 1, "Unknown argument: %s.", argv[i]);
+					exit(EXIT_FAILURE);
+				}
 			}
 			else // Argument is not known, exiting
 			{
