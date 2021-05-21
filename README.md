@@ -12,7 +12,7 @@ The program has the following commands:
 - /e [IMAGE] :: encrypt :: REQUIRES: /t, /o
 - /d [IMAGE] :: decrypt :: REQUIRES: /o
 - /t [TEST FILE] :: text file
-- /o [OUTPUT FILE] :: output file, either .txt OR .bmp **--IT WILL CLEAR ANY DATA IF THE FILE EXISTS--**
+- /o [OUTPUT FILE] :: output file, either **.txt** OR **.bmp** **--IT WILL CLEAR ANY DATA IF THE FILE EXISTS--**
 - /k [KEY] :: encryption key, a key between 0 and 123 for the basic Caesar Cipher, an offset for the characters in ASCII format (0 - 123)
 
 These command work with both the '-' or '/' prefix.
