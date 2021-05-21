@@ -35,4 +35,15 @@ lilog.h<br/>
 TIED.c)<br/>
 
 ---
+## Sources.
+Binary string to number: [Stack Overflow](https://stackoverflow.com/a/15114188/4620857)<br/>
+BMP files: [Wikipedia](https://en.wikipedia.org/wiki/BMP_file_format#:~:text=The%20BMP%20file%20format%2C%20also,and%20OS%2F2%20operating%20systems), [THE BMP FILE FORMAT](http://www.ece.ualberta.ca/~elliott/ee552/studentAppNotes/2003_w/misc/bmp_file_format/bmp_file_format.htm)<br/>
+Variable argument lists: [C Programming](https://www.cprogramming.com/tutorial/c/lesson17.html)<br/>
+Github shields: [Shields io](https://shields.io/)<br/>
+Caesar cipher: [Wikipedia](https://en.wikipedia.org/wiki/Caesar_cipher)<br/>
+Markdown Cheatsheet: [Github](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet)<br/>
+Substring: [Stack Overflow](https://stackoverflow.com/a/4214350/4620857)<br/>
+Counting file characters: [Geeks for Geeks](https://www.geeksforgeeks.org/c-program-to-count-the-number-of-characters-in-a-file/)
+
+---
 ![N|Solid](https://img.shields.io/github/last-commit/LennyIndustries/Project_TIED) ![N|Solid](https://img.shields.io/github/repo-size/LennyIndustries/Project_TIED) ![N|Solid](https://img.shields.io/tokei/lines/github/LennyIndustries/Project_TIED) ![N|Solid](https://img.shields.io/github/issues/LennyIndustries/Project_TIED) ![N|Solid](https://img.shields.io/github/issues-pr/LennyIndustries/Project_TIED)
