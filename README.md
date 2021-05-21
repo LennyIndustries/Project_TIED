@@ -8,7 +8,7 @@ The program, while encrypting, reads the **.txt** and **.bmp** file and checks i
 While decrypting it will read a **.bmp** images and check if the header has the correct tag (ENCRYPTED). Once it has confirmed the tag to be there it will read the file. After this it will check if the Start Of Data (SOD) tag is at the first position, if it is it will read the data until the End Of Data (EOD) tag or if not found until the end of the file, but this will lead to the decryption failing. Once all data is collected it will decrypt the Caesar cipher and send the text to a **.txt** file.
 ## How to use?
 The program has the following commands:
-- /help :: commands overview
+- //help :: commands overview
 - /e [IMAGE] :: encrypt :: REQUIRES: /t, /o
 - /d [IMAGE] :: decrypt :: REQUIRES: /o
 - /t [TEST FILE] :: text file
