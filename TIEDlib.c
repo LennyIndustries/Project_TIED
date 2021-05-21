@@ -438,12 +438,13 @@ void printHelp(void)
 	printf("\nProject TIED, help overview.\n");
 	printf("This program can encrypt or decrypt a BMP file with text and a given Caesar Cipher.\n");
 	printf("Commands:\n");
-	printf("- /help :: commands overview (this)\n");
+	printf("- //help :: commands overview (this)\n");
 	printf("- /e [IMAGE] :: encrypt :: REQUIRES: /t, /o\n");
 	printf("- /d [IMAGE] :: decrypt :: REQUIRES: /o\n");
 	printf("- /t [TEXT FILE] :: text file\n");
 	printf("- /o [OUTPUT FILE] :: output file, either .txt OR .bmp\n");
 	printf("- /k [KEY] :: encryption key, a key between 0 and 123 (incl) for the basic Caesar Cipher,\n\tan offset for the characters in ASCII format. Default value = 0.\n");
+	printf("Commands may be prefixed with '/' or '-'.\n");
 }
 
 char checkFile(char *fileName, char *fileExtension, char terminate, char existing)

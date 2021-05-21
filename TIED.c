@@ -69,7 +69,7 @@ int main(const int argc, char *argv[])
 	// Resolving arguments
 	if (argc <= 1) // Making sure there are arguments
 	{
-		printf("To few arguments: %i.\nRun /help for more info.\nTerminating program.\n", argc);
+		printf("To few arguments: %i.\nRun '//' or '--' help for more info.\nTerminating program.\n", argc);
 		printHelp();
 		liLog(3, __FILE__, __LINE__, 1, "User did not enter enough arguments: %i", argc);
 		exit(EXIT_FAILURE);
@@ -88,7 +88,7 @@ int main(const int argc, char *argv[])
 
 		for (int i = 1; i < argc; i++) // Loading arguments into local variables
 		{
-			if ((strcmp(argv[i] + 1, "help") == 0) && ((argv[i][0] == '/') || (argv[i][0] == '-'))) // strcmp returns 0 if strings match // User want's help, does not matter where it is requested, this exits to program
+			if ((strcmp(argv[i] + 2, "help") == 0) && (((argv[i][0] == '/') && (argv[i][1] == '/')) || ((argv[i][0] == '-') && (argv[i][1] == '-')))) // strcmp returns 0 if strings match // User want's help, does not matter where it is requested, this exits to program
 			{
 				liLog(1, __FILE__, __LINE__, 1, "User requested help. Printing & exiting.");
 				printHelp();
@@ -135,7 +135,7 @@ int main(const int argc, char *argv[])
 			}
 			else // Argument is not known, exiting
 			{
-				printf("\nUnknown argument: %s.\nRun /help for more info.\nTerminating program.\n", argv[i]);
+				printf("\nUnknown argument: %s.\nRun '//' or '--' help for more info.\nTerminating program.\n", argv[i]);
 				printHelp();
 				liLog(3, __FILE__, __LINE__, 1, "Unknown argument: %s.", argv[i]);
 				exit(EXIT_FAILURE);
