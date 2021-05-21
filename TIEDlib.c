@@ -196,6 +196,7 @@ char decryptImage(char *imageP, char *outputP, unsigned char key)
 	char *encryptedTextData = NULL;
 	// Text retrieving
 	unsigned int counter = 0;
+	char indexer = 0;
 	char storage = '\0';
 	unsigned char mask = 0x01;
 
@@ -237,13 +238,13 @@ char decryptImage(char *imageP, char *outputP, unsigned char key)
 			printf("\rWorking: %i bytes", counter); // Progress tracking
 			fflush(stdout);
 		#endif
-		for (char j = 0; j < 8; j++)
+		for (indexer = 0; indexer < 8; indexer++)
 		{
 			storage <<= 1;
-			storage = (char) (storage | (imageData[j + (counter * 8)] & mask));
+			storage = (char) (storage | (imageData[indexer + (counter * 8)] & mask)); // Bytes in file
 		}
-		counter++;
-	} while ((storage != EOD) && (counter <= imageBytes));
+		counter++; // The amount of character in the file
+	} while ((storage != EOD) && ((indexer + (counter * 8)) <= imageBytes)); // Check that it is not going over the total bytes in the file if EOD is not found
 	#ifdef EXTLOG
 		printf("\n");
 	#endif
