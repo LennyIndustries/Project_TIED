@@ -92,7 +92,13 @@ int main(const int argc, char *argv[])
 			{
 				liLog(1, __FILE__, __LINE__, 1, "User requested help. Printing & exiting.");
 				printHelp();
-				exit(EXIT_SUCCESS); // Since only help was requested this was successful
+				exit(EXIT_SUCCESS); // Since help was requested this was successful
+			}
+			else if ((strcmp(argv[i] + 1, "contact") == 0) && ((argv[i][0] == '/') || (argv[i][0] == '-'))) // Text file as input, only used while encrypting
+			{
+				liLog(1, __FILE__, __LINE__, 1, "User requested contact. Opening site & exiting.");
+				system("explorer https://github.com/LennyIndustries/Project_TIED/discussions/3");
+				exit(EXIT_SUCCESS); // Since contact was requested this was successful
 			}
 			else if (((strcmp(argv[i] + 1, "e") == 0) && (encrypt == -1)) && ((argv[i][0] == '/') || (argv[i][0] == '-'))) // Encrypting, if encrypt is not -1 it is already decrypting
 			{

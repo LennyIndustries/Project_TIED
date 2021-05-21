@@ -445,6 +445,7 @@ void printHelp(void)
 	printf("- /t [TEXT FILE] :: text file\n");
 	printf("- /o [OUTPUT FILE] :: output file, either .txt OR .bmp\n");
 	printf("- /k [KEY] :: encryption key, a key between 0 and 123 (incl) for the basic Caesar Cipher,\n\tan offset for the characters in ASCII format. Default value = 0.\n");
+	printf("- /contact :: open website to contact the developers.\n");
 	printf("Commands may be prefixed with '/' or '-'.\n");
 }
 
